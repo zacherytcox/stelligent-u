@@ -9,7 +9,7 @@ Resources:
   IAMUser:
     Type: AWS::IAM::User
     Properties:
-      UserName: !Ref IAMUserName
+      UserName: '{{resolve:ssm:TestZachParam:1}}'
   IAMPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties: 

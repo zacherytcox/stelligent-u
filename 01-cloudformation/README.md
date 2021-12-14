@@ -245,12 +245,16 @@ Delete your CFN stacks in the same order you created them in. Did you
 succeed? If not, describe how you would _identify_ the problem, and
 resolve it yourself.
 
+>Did not succeed. You can view the "events" for the inital Cloudformation stack and see that the latest event states the reason for the deletion failure. For fixing it, I would need to delete the Cloudformation stack that the initial Cloudformation stack has a dependancy on.
+
 ### Retrospective 1.2
 
 #### Task: Policy Tester
 
 Show how to use the IAM policy tester to demonstrate that the user
 cannot perform 'Put' actions on any S3 buckets.
+
+> IAM service has an IAM Policy Simulator GUI, which allows the user to select the AWS Services and actions an IAM Policy will contain and run a simulation against a specified AWS resource. In this case, you would select S3 and "PutObject" action and specify any S3 bucket within the AWS Account under "Simulation Resource" field. Once all of the fields are set, you can select the "Run Simulation" button at the top of the page.
 
 #### Task: SSM Parameter Store
 
