@@ -128,11 +128,13 @@ authorized to in the labs account. These tokens will last approximately
 
 What method did you use to store the aws credentials?  What are some other
 options?
+> I used the `aws configure --profile lab` cli command. Alternatively, you can edit the `~/.aws/credentials` file directly.
 
 ###### Question 0.1.1: 2
 
 Which AWS environment variable cannot be set in order to run the
-`aws sts get-session-token` command?
+`aws sts get-session-token` command? 
+>AWS_PROFILE
 
 ##### Option 2: Using AWS Vault to automatically handle your temporary tokens
 
@@ -210,6 +212,8 @@ results. What does this tell you about the access the keys give you on
 your laptop and the access you have in the Cloud9 environment? What
 other methods are there to provide this level of access without using
 keys?_
+>Due to lab 0.1.3 being optional, I decided to skip it. Based on my experience with IAM, the IAM Key should not behave any differently (with the exception of there's some sort of IAM Policy that restricts based on IP or some other condition). 
+>There are some other ways to provide this level of access without using IAM Users. At a high level of detail, IAM Roles are a great way to authenticate an EC2 instance (Cloud9 Workstation) to perform actions to other AWS resources within the AWS account (in these labs, access to the S3 service).
 
 #### Task
 
