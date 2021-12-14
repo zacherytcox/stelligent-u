@@ -4,6 +4,10 @@ Parameters:
   ThisBucketName:
     Type: String
     Description: Enter S3 bucket name
+Conditions:
+  PrefRegion: !Equals 
+    - !Ref AWS::Region
+    - us-east-1
 Resources:
   S3Bucket:
     Type: 'AWS::S3::Bucket'
@@ -11,5 +15,8 @@ Resources:
       BucketName:
         !Join
           - ''
-          - - !Ref AWS::AccountId
+          - - !If:
+              - PrefRegion
+              - !Ref AWS::AccountId
+              - !Ref AWS::Region
             - Ref: ThisBucketName
