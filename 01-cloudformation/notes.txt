@@ -18,3 +18,11 @@ aws s3api --profile labs-mfa --region us-east-2 list-buckets | grep -i "zach"
 
 
 aws cloudformation create-stack --stack-name "lab1-2-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/01-cloudformation/iam.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+
+
+aws cloudformation list-exports --profile labs-mfa --region us-east-1
+
+
+
+aws cloudformation create-stack --stack-name "lab1-2-zach-plz-delete2" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/01-cloudformation/iam2.yaml" --capabilities CAPABILITY_NAMED_IAM
