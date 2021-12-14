@@ -8,6 +8,8 @@ Resources:
   S3Bucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName: 
-        Ref: ThisBucketName
-
+      BucketName:
+        !Join
+          - ''
+          - - !Ref AWS::AccountId
+            - Ref: ThisBucketName
