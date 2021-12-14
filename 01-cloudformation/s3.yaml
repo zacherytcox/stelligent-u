@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a minimal CFN template to create an S3 bucket for Lab 1.1.1.
+Parameters:
+  ThisBucketName:
+    Type: String
+    Description: Enter S3 bucket name
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: 
+        Ref: ThisBucketName
+
+      
