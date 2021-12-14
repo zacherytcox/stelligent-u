@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: This is a minimal CFN template to create an S3 bucket for Lab 1.1.1.
+Description: This is a minimal CFN template to create an S3 bucket for Lab 1.1.2 with params.
 Parameters:
   ThisBucketName:
     Type: String
@@ -11,4 +11,3 @@ Resources:
       BucketName: 
         Ref: ThisBucketName
 
-      

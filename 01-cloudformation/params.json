@@ -1,5 +1,6 @@
 [
     {
-      "ThisBucketName": "zach-super-stelligent-bucket-param"
+      "ParameterKey": "ThisBucketName",
+      "ParameterValue": "zach-super-stelligent-bucket-param"
     }
   ]
