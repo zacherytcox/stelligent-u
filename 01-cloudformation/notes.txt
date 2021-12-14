@@ -4,3 +4,11 @@
 
 
 /usr/local/bin/aws cloudformation describe-stacks --stack-name "lab1-1-zach-plz-delete" --profile labs-mfa --region us-east-1
+
+
+/usr/local/bin/aws cloudformation create-stack --stack-name "lab1-1-zach-plz-delete" --profile labs-mfa --region us-east-2 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/01-cloudformation/s3.yaml" --parameters "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/01-cloudformation/params.json"
+
+/usr/local/bin/aws cloudformation describe-stacks --stack-name "lab1-1-zach-plz-delete" --profile labs-mfa --region us-east-2
+
+
+aws s3api --profile labs-mfa --region us-east-2 list-buckets | grep -i "zach"

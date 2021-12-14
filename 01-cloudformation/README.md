@@ -159,6 +159,7 @@ name.
 #### Question: Why YAML
 
 _Why do we prefer the YAML format for CFN templates?_
+>Easier to read and a lot less json notation that can cause confusion. Addtionally, it requires less punctuation to write the same thing in json.
 
 #### Question: Protecting Resources
 
@@ -166,12 +167,29 @@ _What else can you do to prevent resources in a stack from being deleted?_
 
 See [DeletionPolicy](https://aws.amazon.com/premiumsupport/knowledge-center/cloudformation-accidental-updates/).
 
+>Within Cloudformation, you can add a DeletionPolicy directly to the resource object to modify how the resource is handled in the case of deletion via a stack update/delete. Some of the options for DeletionPolicy are Delete, Retain, or Snapshot.
+>
+>You can leverage IAM or SCP Policies to restrict access to AWS resources for an IAM entities (IAM Users and IAM Roles).
+>
+>Stack Policies can be used to restrict who has access to "update" resources within a Cloudformation stack.
+
 _How is that different from applying Termination Protection?_
+
+>Termination Protection only protects against deleting the Cloudformation stack, not the modification of the stack itself.
 
 #### Task: String Substitution
 
 Demonstrate 2 ways to code string combination/substitution using
 built-in CFN functions.
+
+>2 in 1 example below:
+>!Join # Combination of strings.
+>  - '' # Delimiter.
+>  - - !If: # Function to substitute prefix based on the PrefRegion Condition object.
+>      - PrefRegion 
+>      - !Ref AWS::AccountId # If PrefRegion is True
+>      - !Ref AWS::Region # If PrefRegion is False
+>    - Ref: ThisBucketName
 
 ## Lesson 1.2: Integration with Other AWS Resources
 
