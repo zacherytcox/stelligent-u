@@ -1,0 +1,33 @@
+aws --profile labs-mfa --region us-east-1
+
+aws --profile labs-mfa --region us-east-1 s3 mb s3://stelligent-u-zacherycox
+
+aws --profile labs-mfa --region us-west-2 s3 cp ./data/ s3://stelligent-u-zacherycox/ --recursive
+
+aws --profile labs-mfa --region us-west-2 s3 sync ./data/ s3://stelligent-u-zacherycox/ 
+
+aws --profile labs-mfa --region us-west-2 s3 sync ./data/ s3://stelligent-u-zacherycox/ --exclude "private*"
+
+aws --profile labs-mfa --region us-west-2 s3 ls s3://stelligent-u-zacherycox/
+
+
+aws --profile labs-mfa --region us-east-1 s3 mb s3://stelligent-u-zacherycox2
+
+
+aws --profile labs-mfa --region us-east-1 s3 sync ./data/ s3://stelligent-u-zacherycox/ 
+
+aws --profile labs-mfa --region us-east-1 s3 sync ./data/ s3://stelligent-u-zacherycox/ --acl public-read
+
+aws --profile labs-mfa --region us-east-1 s3 rb --force s3://stelligent-u-zacherycox/
+
+aws --profile labs-mfa --region us-east-1 s3 cp ./data/private.txt s3://stelligent-u-zacherycox/private.txt --acl bucket-owner-full-control
+
+
+aws --profile labs-mfa --region us-east-1 s3api create-bucket --bucket stelligent-u-zacherycox
+
+aws --profile labs-mfa --region us-east-1 s3api put-object-acl --bucket stelligent-u-zacherycox --key README.md --acl public-read
+
+
+aws --profile labs-mfa --region us-east-1 s3api put-bucket-policy --bucket stelligent-u-zacherycox --policy file://bucketpolicy.json
+
+aws --profile labs-mfa --region us-east-1 s3api put-object-acl --bucket stelligent-u-zacherycox --key private.txt --acl authenticated-read
