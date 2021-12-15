@@ -330,8 +330,11 @@ read-only access to the other.
   - Upload a file to each new bucket.
 
 *Were there any errors? If so, take note of them.*
+>Yes, I couldn't upload objects to the blocked S3 bucket.
 
 *What were the results you expected, based on the role's policy?*
+>Yes
+
 
 #### Lab 3.3.3: Conditional restrictions
 

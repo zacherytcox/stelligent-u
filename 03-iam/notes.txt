@@ -19,7 +19,18 @@ aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  l
 
 
 
-aws cloudformation create-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam2.yaml" --capabilities CAPABILITY_NAMED_IAM
+aws cloudformation create-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/lab3-3.yaml" --capabilities CAPABILITY_NAMED_IAM
 
 
 aws sts assume-role --role-arn arn:aws:iam::324320755747:role/zachroleplzdelete --role-session-name "test" --profile labs-mfa
+
+aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  lab3-zach
+
+
+aws --profile labs-mfa --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox2
+
+aws --profile labs-mfa --region us-east-1 s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/iam.yaml
+
+aws cloudformation update-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/lab3-3.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+aws --profile test --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox2
