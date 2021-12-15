@@ -31,3 +31,16 @@ aws --profile labs-mfa --region us-east-1 s3api put-object-acl --bucket stellige
 aws --profile labs-mfa --region us-east-1 s3api put-bucket-policy --bucket stelligent-u-zacherycox --policy file://bucketpolicy.json
 
 aws --profile labs-mfa --region us-east-1 s3api put-object-acl --bucket stelligent-u-zacherycox --key private.txt --acl authenticated-read
+
+aws cloudformation create-stack --stack-name "lab2-3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/02-s3/s3.yaml"
+
+aws cloudformation delete-stack --stack-name "lab2-3-zach-plz-delete" --profile labs-mfa --region us-east-1
+
+aws --profile labs-mfa --region us-east-1 s3api delete-object --bucket stelligent-u-zacherycox --key test.txt --version-id B9mA3foM2qk8gIJb7Ta7tBS5DbEC1Pbe
+
+
+
+aws --profile labs-mfa --region us-east-1 s3api put-object-tagging --bucket stelligent-u-zacherycox --key private.txt --tagging '{"TagSet": [{ "Key": "designation", "Value": "confidential" },{ "Key": "designation2", "Value": "confidential2" }]}'
+
+
+aws cloudformation update-stack --stack-name "lab2-3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/02-s3/s3.yaml"

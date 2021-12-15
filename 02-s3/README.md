@@ -321,9 +321,12 @@ Delete one of the objects that you changed.
 
 _Can you still retrieve old versions of the object you removed?_
 
+>Yes. AWS places a delete marker but keeps all versions of the object.
+
 ##### Question: Deleting All Versions
 
 _How would you delete all versions?_
+>From CLI, you would need to delete all versions individually. From other methods, such as API or console, you can delete multiple objects (versions included).
 
 #### Lab 2.3.3: Tagging S3 Resources
 
@@ -335,6 +338,7 @@ through the CLI or the console.
 
 _Can you change a single tag on a bucket or object, or do you have to change
 all its tags at once?_
+>You have to specify all of the tags during `put-object-tagging` and `put-bucket-tagging` CLI calls made using the s3api.
 
 (See `aws:cloudformation:stack-id` and other AWS-managed tags.)
 
@@ -359,6 +363,8 @@ _Can you make any of these transitions more quickly?_
 
 *See the [S3 lifecycle transitions doc](https://docs.aws.amazon.com/AmazonS3/latest/dev/lifecycle-transition-general-considerations.html).*
 
+> Infrequent Access (Standard or S3 One Zone) cannot be any faster than 30 days. 
+
 ### Stretch Challenge
 
 For objects with the tag you assigned earlier and under the `trash/` prefix,
@@ -369,6 +375,10 @@ expire them after 1 day.
 *How could the lifecycle and versioning features of S3 be used to manage
 the lifecycle of a web application? Would you use those features to manage
 the webapp code itself, or just the app's data?*
+
+>It all depends on the application and it's requirements. Lifecycle is extremely helpful for cost savings such as reducing the number of logs stored within S3 (I'm thinking CloudTrail with S3 delievery). Versioning could help with accidental deletion/overwrite by a user or malfunction of an application.
+>For webapp code, versioning would be extremely useful in the case of an application failure (even though it may cost some additional money to have those previous versions available within the AWS Account). 
+>For webapp's data, it depends on the application's behavior, it's data requirements, and the cost budget for the application. But I think overall, versioning would be very useful in the case of faults. Lifecycle would need to be tuned to business needs for DR plan and cost savings.
 
 ## Lesson 2.4: S3 Object Encryption
 

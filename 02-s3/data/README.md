@@ -12,7 +12,7 @@
         - [Question: Copying to Top Level](#question-copying-to-top-level)
         - [Question: Directory Copying](#question-directory-copying)
         - [Question: Object Access](#question-object-access)
-        - [Question: Sync vs Copy](#question-sync-vs-copy)
+        - [Question: Sync vddds Copy](#question-sync-vs-copy)
       - [Lab 2.1.3: Exclude Private Objects When Uploading to a Bucket](#lab-213-exclude-private-objects-when-uploading-to-a-bucket)
       - [Lab 2.1.4: Clean Up](#lab-214-clean-up)
     - [Retrospective 2.1](#retrospective-21)

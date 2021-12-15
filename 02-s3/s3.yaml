@@ -1,22 +1,36 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: This is a minimal CFN template to create an S3 bucket for Lab 1.1.2 with params.
-Parameters:
-  ThisBucketName:
-    Type: String
-    Description: Enter S3 bucket name
-Conditions:
-  PrefRegion: !Equals 
-    - !Ref AWS::Region
-    - us-east-1
+Description: This is a minimal CFN template to create an S3 bucket for Lab 2.3 .
 Resources:
   S3Bucket:
     Type: 'AWS::S3::Bucket'
     Properties:
-      BucketName:
-        !Join
-          - ''
-          - - !If:
-              - PrefRegion
-              - !Ref AWS::AccountId
-              - !Ref AWS::Region
-            - Ref: ThisBucketName
+      BucketName: stelligent-u-zacherycox
+      VersioningConfiguration: 
+        Status: Enabled
+      LifecycleConfiguration:
+        Rules:
+          - Id: GlacierRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 90
+                StorageClass: GLACIER
+          - Id: IFRule
+            Status: Enabled
+            Transitions:
+              - TransitionInDays: 30
+                StorageClass: STANDARD_IA
+          - Id: oncurrent-object
+            Status: Enabled
+            NoncurrentVersionExpiration:
+              NoncurrentDays: 9
+          - Id: aborted-multipart
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+          - Id: stretch
+            Status: Enabled
+            ExpirationInDays: 1
+            Prefix: trash/
+            TagFilters:
+              - Key: Trash
+                Value: True
