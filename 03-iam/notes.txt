@@ -16,3 +16,10 @@ aws cloudformation update-stack --stack-name "lab3-zach-plz-delete" --profile la
 aws --profile labs-mfa --region us-east-1 iam get-role --role zachroleplzdelete
 
 aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  lab3-zach-plz-delete
+
+
+
+aws cloudformation create-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam2.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+
+aws sts assume-role --role-arn arn:aws:iam::324320755747:role/zachroleplzdelete --role-session-name "test" --profile labs-mfa

@@ -263,6 +263,8 @@ _In the context of an AWS User or Role, what is the difference between
 an inline policy and a customer managed policy? What are the differences
 between a customer managed policy and an AWS managed policy?_
 
+> In the context of an IAM User or an IAM Role, there will not be a difference in their access nor how they are attached. The main difference will be how each type of IAM Policies are attached to IAM entities. Inline policies are custom IAM Policies that can only be attached to a single IAM entity, thus cannot scale. Customer managed policies are custom IAM Policies that can be attached to several IAM entities, thus scale very well. AWS managed policies are IAM Policies similar to Customer manaaged policies with the difference that AWS created/manages them on behalf of all of their AWS customers.
+
 #### Question: Role Assumption
 
 _When assuming a role, are the permissions of the initial principal
@@ -270,6 +272,9 @@ mixed with those of the role being assumed?
 Describe how that could easily be demonstrated with both a
 [positive and negative testing](https://www.guru99.com/positive-vs-negative-testing.html)
 approach._
+>No. Each IAM entity has their own set of permissions and each credential specifies which IAM entity you're performing actions as. 
+>
+>We can easily demonstrate this by determining which APIs we want to test and perform each API with each credential so we can document the results of the positive and negative testing. For example, with the two credentials I have available to me (IAM User and Assumed Role), I would perform `cloudformation create-stack` with each credential and confirm the results, which should be allowed via the IAM User credential but denied by the Assumed Role credential (because we only granted ReadOnly and S3FullAccess).
 
 ## Lesson 3.3: Fine-Grained Controls With Policies
 
