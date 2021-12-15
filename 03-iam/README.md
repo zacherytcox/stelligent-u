@@ -170,6 +170,8 @@ stack's two roles in order to pass those values to the CLI function. You
 probably used the AWS web console to get the ARN for each role. What
 could you have done to your CFN template to make that unnecessary?_
 
+>Could output the role arns as a part of the Outputs section for my Cloudformation. Similarly like how I exported values outside in an earlier lab.
+
 #### Task: Stack Outputs
 
 Institute that change from the Question above. Recreate the stack as per

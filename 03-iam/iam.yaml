@@ -52,3 +52,10 @@ Resources:
   #   DependsOn:
   #     - IAMRole
   #     - IAMRole2
+Outputs:
+  IAMPolicyARN1:
+      Description: The ARN of the IAM Role
+      Value: !GetAtt IAMRole.Arn
+  IAMPolicyARN2:
+      Description: The ARN of the IAM Role
+      Value: !GetAtt IAMRole2.Arn
