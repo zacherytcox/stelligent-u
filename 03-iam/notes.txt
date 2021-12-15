@@ -1,0 +1,18 @@
+
+
+aws cloudformation create-stack --stack-name "lab3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+aws --profile labs-mfa --region us-east-1 cloudformation describe-stack-resources --stack  lab3-zach-plz-delete
+
+
+
+
+aws --profile labs-mfa --region us-east-1 iam list-roles | grep -i "zach" -A 20 -B 20
+
+
+aws cloudformation update-stack --stack-name "lab3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+
+aws --profile labs-mfa --region us-east-1 iam get-role --role zachroleplzdelete
+
+aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  lab3-zach-plz-delete

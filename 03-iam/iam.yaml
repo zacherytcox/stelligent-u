@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create an IAM Role and Policy for Lab 3.
+Resources:
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - 'sts:AssumeRole'
+      RoleName: zachroleplzdelete
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+  IAMRole2:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service:
+            - ec2.amazonaws.com
+          Action:
+          - 'sts:AssumeRole'
+      RoleName: zachroleplzdelete2
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/IAMReadOnlyAccess
+        - arn:aws:iam::aws:policy/AmazonEC2ReadOnlyAccess
+  # IAMPolicy:
+  #   Type: AWS::IAM::ManagedPolicy
+  #   Properties: 
+  #     Description: IAM Policy for multiple IAM Roles
+  #     ManagedPolicyName: zachroleplzdeletepolicy
+  #     PolicyDocument:
+  #       Version: '2012-10-17'
+  #       Statement:
+  #       - Sid: VisualEditor0
+  #         Effect: Allow
+  #         Action:
+  #         - iam:List*
+  #         - iam:Get*
+  #         Resource: "*"
+  #     Roles: 
+  #       - !Ref IAMRole
+  #       - !Ref IAMRole2
+  #   DependsOn:
+  #     - IAMRole
+  #     - IAMRole2

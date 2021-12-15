@@ -121,6 +121,8 @@ policy:
   indicate the re-use of the policy.
 
 - Update the Stack. *Did the stack update work?*
+>No. Changes to the description field of an IAM Policy requires me to recreate it.
+>`CloudFormation cannot update a stack when a custom-named resource requires replacing. Rename iampolicy and update the stack again`
 
   - Query the stack to determine its state.
   - If the stack update was not successful,
