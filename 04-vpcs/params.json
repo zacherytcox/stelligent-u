@@ -1,0 +1,22 @@
+[
+    {
+        "ParameterKey": "VPCCIDR",
+        "ParameterValue": "192.168.0.0/16"
+    },
+    {
+        "ParameterKey": "SubnetCIDR",
+        "ParameterValue": "192.168.0.0/24"
+    },
+    {
+        "ParameterKey": "TagUser",
+        "ParameterValue": "zachery.cox.labs"
+    },
+    {
+        "ParameterKey": "TagLesson",
+        "ParameterValue": "04"
+    },
+    {
+        "ParameterKey": "TagLab",
+        "ParameterValue": "4.1.1"
+    }
+]
