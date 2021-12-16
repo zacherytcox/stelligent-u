@@ -78,6 +78,10 @@ Outputs:
   VPCID:
     Description: VPC ID
     Value: !Ref VPC
+    Export:
+      Name: Zach-Lab4-VPCID
   SubnetID:
     Description: Subnet ID
     Value: !Ref Subnet
+    Export:
+      Name: Zach-Lab4-SubnetID

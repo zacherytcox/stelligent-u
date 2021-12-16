@@ -133,10 +133,13 @@ Launch an EC2 instance into your VPC.
 
 _After you launch your new stack, can you ssh to the instance?_
 
+>No, because it doesnt have a public IP address that I can connect to.
+
 ##### Question: Verify Connectivity
 
 _Is there a way that you can verify Internet connectivity from the instance
 without ssh'ing to it?_
+>We could add `userdata` to the EC2 instance (that instructs the instance to curl a website) and check it's console output logs. Alternatively, we could use the SSM service to "run" an a similar command from the instance and determine if it has Internet connectivity.
 
 #### Lab 4.1.5: Security Group
 
@@ -147,6 +150,7 @@ Add a security group to your EC2 stack:
 ##### Question: Connectivity
 
 _Can you ssh to your instance yet?_
+>No, because there is still not a public IP address that I can connect to.
 
 #### Lab 4.1.6: Elastic IP
 
@@ -159,6 +163,9 @@ Add an Elastic IP to your EC2 stack:
 Your EC2 was already on a network with an IGW, and now we've fully
 exposed it to the Internet by giving it a public IP address that's
 reachable from anywhere outside your VPC.
+
+!!!HERE
+
 
 ##### Question: Ping
 

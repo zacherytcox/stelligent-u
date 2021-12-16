@@ -1,0 +1,26 @@
+[
+    {
+        "ParameterKey": "TagUser",
+        "ParameterValue": "zachery.cox.labs"
+    },
+    {
+        "ParameterKey": "TagLesson",
+        "ParameterValue": "04"
+    },
+    {
+        "ParameterKey": "TagLab",
+        "ParameterValue": "4.1.5"
+    },
+    {
+        "ParameterKey": "AMI",
+        "ParameterValue": "ami-0ed9277fb7eb570c9"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.micro"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "zacherycox"
+    }
+]

@@ -47,9 +47,17 @@ print_style () {
 }
 
 delete_stack () {
+
+    if [[ "$1" == '' ]]
+        then
+            stack=$STACKNAME
+        else
+            stack=$1
+    fi
+
     print_style  "Deleting Stack..." "danger"
 
-    aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name "$STACKNAME"
+    aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name "$stack"
     if [[ "$?" != '0' ]]
         then
             #Exit if the stack does not exist
@@ -57,13 +65,69 @@ delete_stack () {
             exit 1
     fi
 
-    aws cloudformation delete-stack --stack-name "$STACKNAME" --profile $PROFILE --region $REGION 
+    aws cloudformation delete-stack --stack-name "$stack" --profile $PROFILE --region $REGION 
 
-    print_style  "Check status by running 'cfn $STACKNAME' " "info"
+    print_style  "Check status by running 'cfn $stack' " "info"
     print_style  "For S3 buckets that do not delete due to objects, please run 'aws --profile $PROFILE --region $REGION s3 rb --force s3://BUCKETNAME/'" "info"
 
-    aws --profile $PROFILE --region $REGION cloudformation wait stack-delete-complete --stack-name $STACKNAME
+    aws --profile $PROFILE --region $REGION cloudformation wait stack-delete-complete --stack-name $stack
     exit 1
+}
+
+update_stack () {
+    #stack_name, yaml_location, yaml_param_location, profile
+    if [[ "$4" == '' ]]
+        then
+            profile=$PROFILE
+        else
+            profile=$4
+    fi
+
+    print_style  "Updating Stack $1..." "info"
+    stackid=$(aws cloudformation update-stack --stack-name "$1" --profile $profile --region $REGION --template-body $2  --parameters $3 --capabilities CAPABILITY_NAMED_IAM )
+
+    print_style  "$stackid" "warning" 
+
+    aws --profile $profile --region $REGION cloudformation wait stack-update-complete --stack-name $(echo $stackid | jq -r '.StackId')
+
+    if [[ "$?" != '0' ]]
+        then
+            read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
+    fi
+
+}
+
+create_stack () {
+    #stack_name, yaml_location, yaml_param_location, profile
+    if [[ "$4" == '' ]]
+        then
+            profile=$PROFILE
+        else
+            profile=$4
+    fi
+
+    aws --profile $profile --region $REGION cloudformation describe-stacks --stack-name "$1"
+
+    if [[ "$?" != '0' ]]
+        then
+            print_style  "Creating Stack $1..." "info"
+            stackid=$(aws cloudformation create-stack --stack-name $1 --profile $profile --region $REGION --template-body $2 --capabilities CAPABILITY_NAMED_IAM --parameters $3)
+
+            aws --profile $profile --region $REGION cloudformation wait stack-create-complete --stack-name $(echo $stackid | jq -r '.StackId')
+
+            if [[ "$?" != '0' ]]
+                then
+
+                    aws --profile $profile --region $REGION cloudformation describe-stack-events --stack $1 | jq -r '.StackEvents'
+
+                    read -p "Issues exist. Enter 1 to delete Stack, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
+                    delete_stack $1
+            fi
+        else
+            update_stack $1 $2 $3 $profile
+    fi
+
+    
 }
 
 assume_role () {
@@ -92,78 +156,15 @@ fi
 #Set Environment
 print_style  "Setting environment" "info"
 
-aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name "$STACKNAME"
-
-if [[ "$?" != '0' ]]
-    then
-        print_style  "Creating Stack $STACKNAME..." "info"
-        stackid=$(aws cloudformation create-stack --stack-name $STACKNAME --profile $PROFILE --region $REGION --template-body $YAMLLOCATION --capabilities CAPABILITY_NAMED_IAM --parameters $YAMLPARAMSLOCATION)
-
-        aws --profile $PROFILE --region $REGION cloudformation wait stack-create-complete --stack-name $(echo $stackid | jq -r '.StackId')
-
-        if [[ "$?" != '0' ]]
-            then
-                read -p "Issues exist. Enter 1 to delete Stack, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
-                delete_stack
-        fi
-    else
-        print_style  "Updating Stack $STACKNAME..." "info"
-        stackid=$(aws cloudformation update-stack --stack-name "$STACKNAME" --profile $PROFILE --region $REGION --template-body $YAMLLOCATION  --parameters $YAMLPARAMSLOCATION --capabilities CAPABILITY_NAMED_IAM )
-
-        print_style  "$stackid" "warning" 
-
-        aws --profile $PROFILE --region $REGION cloudformation wait stack-update-complete --stack-name $(echo $stackid | jq -r '.StackId')
-
-        if [[ "$?" != '0' ]]
-            then
-                read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
-        fi
-
-fi
+create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
 
 
-# #Tests
-# print_style  "$PROFILE tests" "info"
-# aws --profile $PROFILE --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox1
-# aws --profile $PROFILE --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox2
-
-# aws --profile $PROFILE --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox1 --prefix "lebowski/"
-# aws --profile $PROFILE --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox2 --prefix "lebowski/"
-
-# aws --profile $PROFILE --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/iam.yaml
-# aws --profile $PROFILE --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox2/iam.yaml
-
-# print_style  "Assumed Role tests" "info"
-# aws --profile test --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox1
-# aws --profile test --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox2
-
-# aws --profile test --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox1 --prefix "lebowski/"
-# aws --profile test --region $REGION s3api list-objects --max-items 4 --bucket stelligent-u-zacherycox2 --prefix "lebowski/"
-
-# aws --profile test --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/iam.yaml
-# aws --profile test --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox2/iam.yaml
+#Tests
+this_yaml_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-vpcs/ec2.yaml"
+this_yaml_param_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-vpcs/params-ec2.json"
+this_stack_name="lab4-zach-2"
+create_stack $this_stack_name $this_yaml_path $this_yaml_param_path
+read -p "Enter 1 when finished with EC2: " policytype && [[ $policytype == [1] ]]
+# delete_stack $this_stack_name
 
 
-# #new tests for lab
-# print_style  "New Tests for Lab" "info"
-
-# aws --profile test --region $REGION s3 rm s3://stelligent-u-zacherycox1/iam.yaml
-# if [[ "$?" == '0' ]]
-#     then
-#         #Restore if successful
-#         print_style  "Restoring file" "info"
-#         aws --profile $PROFILE --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/iam.yaml
-# fi
-
-# aws --profile test --region $REGION s3 rm s3://stelligent-u-zacherycox2/iam.yaml
-# if [[ "$?" == '0' ]]
-#     then
-#         #Restore if successful
-#         print_style  "Restoring file" "info"
-#         aws --profile $PROFILE --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox2/iam.yaml
-# fi
-
-
-# print_style  "Restrict PutObject" "info"
-# aws --profile test --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/lebowski/iam.yaml
-# aws --profile test --region $REGION s3 cp ./iam.yaml s3://stelligent-u-zacherycox2/lebowski/iam.yaml
