@@ -33,4 +33,6 @@ aws --profile labs-mfa --region us-east-1 s3 cp ./iam.yaml s3://stelligent-u-zac
 
 aws cloudformation update-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/lab3-3.yaml" --capabilities CAPABILITY_NAMED_IAM
 
-aws --profile test --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox2
+aws --profile test --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox1
+
+aws --profile labs-mfa --region us-east-1 iam get-role-policy --role-name zachroleplzdelete --policy-name Temp

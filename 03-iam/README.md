@@ -333,7 +333,7 @@ read-only access to the other.
 >Yes, I couldn't upload objects to the blocked S3 bucket.
 
 *What were the results you expected, based on the role's policy?*
->Yes
+>I was expecting to be denied access to upload objects to the restricted bucket, while continuing full access to the other bucket.
 
 
 #### Lab 3.3.3: Conditional restrictions
@@ -367,21 +367,25 @@ restrictions exhaustive? Did you consider additional [[positive and/or negative
 tests]](https://smartbear.com/learn/automated-testing/negative-testing/)
 that could be automated in order to confirm the permissions for the
 Role?_
+>The test were not completely exhaustive. There are several permissions that could be tested in addition to the already specified tests, such as: copying, deleting, or overwriting objects and/or their permissions (ACL/Bucket Policy).
 
 #### Task: Positive and Negative Tests
 
 Code at least one new positive and one new negative test.
+>Within `test.sh` file
 
 #### Question: Limiting Uploads
 
 _Is it possible to limit uploads of objects with a specific prefix (e.g.
 starting with "lebowski/") to an S3 bucket using IAM conditions? If not, how else
 could this be accomplished?_
+>No, there isn't a `--prefix` flag for `put-object` API. You would need to leverage the resource component of the IAM Policy.
 
 #### Task: Limiting Uploads
 
 Research and review the best method to limit uploads with a specific prefix to
 an S3 bucket.
+>Leveraging the resource component of the IAM Policy.
 
 ## Further Reading
 
