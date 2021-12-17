@@ -177,7 +177,14 @@ aws --profile $PROFILE --region $REGION ec2 wait instance-status-ok --instance-i
 
 ping -c 4 $eip
 
+scp ./zacherycox.pem ec2-user@$eip:/home/ec2-user/zacherycox.txt
+
 ssh ec2-user@$eip -i ./zacherycox.pem
+
+
+
+# ssh -J ec2-user@192.168.0.157 ec2-user@192.168.1.237 -i ./zacherycox.pem
+# ssh -J ec2-user@$eip ec2-user@192.168.1.237
 
 
 read -p "Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1

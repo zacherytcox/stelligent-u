@@ -9,7 +9,7 @@
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "4.1.6"
+        "ParameterValue": "4.1.7"
     },
     {
         "ParameterKey": "AMI",
@@ -26,5 +26,9 @@
     {
         "ParameterKey": "TesterIP",
         "ParameterValue": "75.60.3.46"
+    },
+    {
+        "ParameterKey": "SubnetCIDR",
+        "ParameterValue": "192.168.1.0/24"
     }
 ]

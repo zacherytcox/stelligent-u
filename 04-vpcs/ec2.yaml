@@ -15,6 +15,8 @@ Parameters:
     Type: String
   TesterIP:
     Type: String
+  SubnetCIDR:
+    Type: String
 Resources:
   EC2:
     Type: AWS::EC2::Instance
@@ -55,7 +57,7 @@ Resources:
         - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: !Join [ "", [ !Ref TesterIP,"/32" ] ]
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -75,6 +77,66 @@ Resources:
           Value: !Ref TagLesson
         - Key: stelligent-u-lab
           Value: !Ref TagLab
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+      CidrBlock: !Ref SubnetCIDR
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-NATGatewayID"}}
+      RouteTableId: !Ref RouteTable
+    DependsOn:
+      - RouteTable
+  EC22:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: !Ref Subnet
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: !Ref TagUser
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#!/bin/bash\n"
+            - "curl www.google.com \n"
 Outputs:
   InstanceID:
     Description: InstanceID

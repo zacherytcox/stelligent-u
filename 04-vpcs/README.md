@@ -207,15 +207,18 @@ existing instance stack.
 ##### Question: Access
 
 _Can you find a way to ssh to this instance?_
+>I would not be able to directly SSH to the new EC2 instance. I would need to SSH to my publically available EC2 instance, then SSH to the private EC2 instance (acting as a bastion host).
 
 ##### Question: Egress
 
 _If you can ssh to it, can you send traffic out?_
+> Yes, traffic travels through the NATGateway.
 
 ##### Question: Deleting the Gateway
 
 _If you delete the NAT gateway, what happens to the ssh session on your private
 instance?_
+>Session continues, but I am no longer able to reach the Internet via `Curl`
 
 ##### Question: Recreating the Gateway
 
@@ -223,6 +226,8 @@ _If you recreate the NAT gateway and detach the Elastic IP from the public EC2
 instance, can you still reach the instance from the outside?_
 
 Test it out with the AWS console.
+
+>No, the public EC2 instance was our only way to connect to the private EC2 instance.
 
 #### Lab 4.1.8: Network ACL
 
