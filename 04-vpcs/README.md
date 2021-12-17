@@ -139,7 +139,7 @@ _After you launch your new stack, can you ssh to the instance?_
 
 _Is there a way that you can verify Internet connectivity from the instance
 without ssh'ing to it?_
->We could add `userdata` to the EC2 instance (that instructs the instance to curl a website) and check it's console output logs. Alternatively, we could use the SSM service to "run" an a similar command from the instance and determine if it has Internet connectivity.
+>We could add `userdata` to the EC2 instance (that instructs the instance to curl a website) and check it's console output logs. Alternatively, we could use the SSM service to "run" an a similar command from the instance and determine if it has Internet connectivity. AWS also has a "Reachability Analyzer" that can be used within the AWS console and provides feedback on possible issues.
 
 #### Lab 4.1.5: Security Group
 
@@ -164,20 +164,21 @@ Your EC2 was already on a network with an IGW, and now we've fully
 exposed it to the Internet by giving it a public IP address that's
 reachable from anywhere outside your VPC.
 
-!!!HERE
-
 
 ##### Question: Ping
 
 _Can you ping your instance now?_
+>Yes, finally!
 
 ##### Question: SSH
 
 _Can you ssh into your instance now?_
+>Yes, finally!
 
 ##### Question: Traffic
 
 _If you can ssh, can you send any traffic (e.g. curl) out to the Internet?_
+>Yes, I can perform a `curl google.com` command and get a response.
 
 At this point, you've made your public EC2 instance an [ssh bastion](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html).
 We'll make use of that to explore your network below.

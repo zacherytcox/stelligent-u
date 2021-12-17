@@ -9,7 +9,7 @@
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "4.1.5"
+        "ParameterValue": "4.1.6"
     },
     {
         "ParameterKey": "AMI",
@@ -22,5 +22,9 @@
     {
         "ParameterKey": "KeyName",
         "ParameterValue": "zacherycox"
+    },
+    {
+        "ParameterKey": "TesterIP",
+        "ParameterValue": "75.60.3.46"
     }
 ]

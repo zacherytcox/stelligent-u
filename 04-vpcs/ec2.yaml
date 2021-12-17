@@ -13,6 +13,8 @@ Parameters:
     Type: String
   KeyName:
     Type: String
+  TesterIP:
+    Type: String
 Resources:
   EC2:
     Type: AWS::EC2::Instance
@@ -46,14 +48,14 @@ Resources:
       GroupDescription: SecurityGroup
       GroupName: ZachSG
       SecurityGroupIngress:
-        - IpProtocol: ICMP
-          FromPort: 80
-          ToPort: 80
-          CidrIp: 0.0.0.0/0
-        - IpProtocol: TCP
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: !Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          CidrIp: 0.0.0.0/0
+          CidrIp: !Join [ "", [ !Ref TesterIP,"/32" ] ]
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -80,3 +82,6 @@ Outputs:
   PrivateIP:
     Description: PrivateIP
     Value: !GetAtt  EC2.PrivateIp
+  EIP:
+    Description: EIP
+    Value: !Ref  EIP

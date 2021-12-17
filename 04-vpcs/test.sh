@@ -90,10 +90,10 @@ update_stack () {
 
     aws --profile $profile --region $REGION cloudformation wait stack-update-complete --stack-name $(echo $stackid | jq -r '.StackId')
 
-    if [[ "$?" != '0' ]]
-        then
-            read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
-    fi
+    # if [[ "$?" != '0' ]]
+    #     then
+    #         read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
+    # fi
 
 }
 
@@ -106,7 +106,7 @@ create_stack () {
             profile=$4
     fi
 
-    aws --profile $profile --region $REGION cloudformation describe-stacks --stack-name "$1"
+    aws --profile $profile --region $REGION cloudformation describe-stacks --stack-name "$1" --max-items 1 
 
     if [[ "$?" != '0' ]]
         then
@@ -124,6 +124,7 @@ create_stack () {
                     delete_stack $1
             fi
         else
+            # read -p "Stack already exists! Enter 1 to update the stack, enter anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
             update_stack $1 $2 $3 $profile
     fi
 
@@ -164,7 +165,23 @@ this_yaml_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-
 this_yaml_param_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-vpcs/params-ec2.json"
 this_stack_name="lab4-zach-2"
 create_stack $this_stack_name $this_yaml_path $this_yaml_param_path
-read -p "Enter 1 when finished with EC2: " policytype && [[ $policytype == [1] ]]
-# delete_stack $this_stack_name
+
+eip=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name "lab4-zach-2" --max-items 1 | jq -r '.[]' | jq -r '.[].Outputs'| jq -r '.[] | select(.OutputKey=="EIP") | .OutputValue')
+
+instance_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name "lab4-zach-2" --max-items 1 | jq -r '.[]' | jq -r '.[].Outputs'| jq -r '.[] | select(.OutputKey=="InstanceID") | .OutputValue')
+
+print_style  "Waiting for EC2 Instance Status..." "info"
+aws --profile $PROFILE --region $REGION ec2 wait instance-status-ok --instance-ids $instance_id
+
+# aws --profile $PROFILE --region $REGION ec2 get-console-output --instance-id $instance_id
+
+ping -c 4 $eip
+
+ssh ec2-user@$eip -i ./zacherycox.pem
+
+
+read -p "Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
+
+delete_stack $this_stack_name
 
 

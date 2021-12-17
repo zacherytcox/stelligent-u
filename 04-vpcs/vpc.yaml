@@ -64,6 +64,11 @@ Resources:
         - Key: stelligent-u-lab
           Value: !Ref TagLab
       VpcId: !Ref VPC
+  RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
   Route:
     Type: AWS::EC2::Route
     Properties: 
