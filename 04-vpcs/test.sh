@@ -71,7 +71,6 @@ delete_stack () {
     print_style  "For S3 buckets that do not delete due to objects, please run 'aws --profile $PROFILE --region $REGION s3 rb --force s3://BUCKETNAME/'" "info"
 
     aws --profile $PROFILE --region $REGION cloudformation wait stack-delete-complete --stack-name $stack
-    exit 1
 }
 
 update_stack () {
@@ -90,10 +89,10 @@ update_stack () {
 
     aws --profile $profile --region $REGION cloudformation wait stack-update-complete --stack-name $(echo $stackid | jq -r '.StackId')
 
-    # if [[ "$?" != '0' ]]
-    #     then
-    #         read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
-    # fi
+    if [[ "$?" != '0' ]]
+        then
+            read -p "Issues exist. Enter 1 to continue, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
+    fi
 
 }
 
@@ -118,10 +117,11 @@ create_stack () {
             if [[ "$?" != '0' ]]
                 then
 
-                    aws --profile $profile --region $REGION cloudformation describe-stack-events --stack $1 | jq -r '.StackEvents'
+                    aws --profile $profile --region $REGION cloudformation describe-stack-events --stack $1 | jq -r '.StackEvents' | jq -r '.[] | {LogicalResourceId, ResourceStatus, ResourceStatusReason}'
 
                     read -p "Issues exist. Enter 1 to delete Stack, anything else to cancel: " policytype && [[ $policytype == [1] ]] || exit 1
                     delete_stack $1
+                    exit 1
             fi
         else
             # read -p "Stack already exists! Enter 1 to update the stack, enter anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
@@ -146,6 +146,7 @@ assume_role () {
 if [[ "$1" == 'delete' ]]
     then
         delete_stack
+        exit 1
 fi
 
 if [[ "$1" == 'sts' ]]
@@ -161,6 +162,15 @@ create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
 
 
 #Tests
+print_style  "Key Pair Creation" "info"
+aws --profile $PROFILE --region $REGION ec2 describe-key-pairs --key-name zacherycox
+if [[ "$?" != '0' ]]
+    then
+        print_style  "Creating Key Pair..." "info"
+        chmod 744 ./zacherycox.pem
+        aws --profile $PROFILE --region $REGION ec2 create-key-pair --key-name zacherycox | jq -r '.KeyMaterial' > zacherycox.pem
+fi
+chmod 400 zacherycox.pem
 this_yaml_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-vpcs/ec2.yaml"
 this_yaml_param_path="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/04-vpcs/params-ec2.json"
 this_stack_name="lab4-zach-2"
@@ -177,18 +187,17 @@ aws --profile $PROFILE --region $REGION ec2 wait instance-status-ok --instance-i
 
 ping -c 4 $eip
 
-scp ./zacherycox.pem ec2-user@$eip:/home/ec2-user/zacherycox.txt
+scp -i ./zacherycox.pem ./zacherycox.pem ec2-user@$eip:/home/ec2-user/zacherycox.txt
 
 ssh ec2-user@$eip -i ./zacherycox.pem
-
-
-
-# ssh -J ec2-user@192.168.0.157 ec2-user@192.168.1.237 -i ./zacherycox.pem
-# ssh -J ec2-user@$eip ec2-user@192.168.1.237
+# mv ./zacherycox.txt ./zacherycox.pem; ssh ec2-user@192.168.1.25 -i ./zacherycox.pem 
 
 
 read -p "Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
 
+print_style  "Deleting Key Pair" "info"
+aws --profile $PROFILE --region $REGION ec2 delete-key-pair --key-name zacherycox
+rm -rf ./zacherycox.pem
 delete_stack $this_stack_name
 
 

@@ -245,6 +245,9 @@ First, add one on the public subnet:
 
 _Can you still reach your EC2 instances?_
 
+> Yes, I can reach both. Private instance via the bastion host.
+
+
 Add another ACL to your private subnet:
 
 - Only allow traffic from the public subnet.
