@@ -166,6 +166,7 @@ values via a scripted mechanism.
 _When updating a Stack containing an EC2 instance,
 [what other changes](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html)
 will cause the same thing to occur as in Lab 5.1.3?_
+> Change to AZ, CPU Options, AMI, Key Pair, launch template, network interfaces, and several others.
 
 ## Lesson 5.2: Instance Access
 
