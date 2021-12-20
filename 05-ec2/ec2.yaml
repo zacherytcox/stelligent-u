@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create VPCs for Lab 5.
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData: 
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        TagSpecifications: 
+          - ResourceType: instance
+            Tags: 
+              - Key: user
+                Value: !Ref TagUser
+              - Key: stelligent-u-lesson
+                Value: !Ref TagLesson
+              - Key: stelligent-u-lab
+                Value: !Ref TagLab
+              - Key: Name
+                Value: !Ref TagUser
+      LaunchTemplateName: !Ref TagUser
+      TagSpecifications: 
+        - ResourceType: launch-template
+          Tags: 
+            - Key: user
+              Value: !Ref TagUser
+            - Key: stelligent-u-lesson
+              Value: !Ref TagLesson
+            - Key: stelligent-u-lab
+              Value: !Ref TagLab
+            - Key: Name
+              Value: !Ref TagUser
+
+  EC2:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-0b0ea68c435eb488d
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: 1
+  EC22:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: ami-09b333b07b596e8d1
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: 1
+
+  # SecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties: 
+  #     GroupDescription: SecurityGroup
+  #     GroupName: ZachSG
+  #     SecurityGroupIngress:
+  #       - IpProtocol: icmp
+  #         FromPort: 8
+  #         ToPort: -1
+  #         CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+  #       - IpProtocol: tcp
+  #         FromPort: 22
+  #         ToPort: 22
+  #         CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+  #     Tags:  
+  #       - Key: user
+  #         Value: !Ref TagUser
+  #       - Key: stelligent-u-lesson
+  #         Value: !Ref TagLesson
+  #       - Key: stelligent-u-lab
+  #         Value: !Ref TagLab
+  #     VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
