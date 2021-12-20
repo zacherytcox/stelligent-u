@@ -141,6 +141,8 @@ Windows Server 2012 R2:
 - Query the stack's events using the AWS CLI. What happened to your
   original EC2 Windows instance?
 
+>It got destroyed and a new instance was created because the change of AMI requires a new resource.
+
 #### Lab 5.1.4: Teardown
 
 There is usually some delay between initiating an instance's termination

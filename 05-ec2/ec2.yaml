@@ -52,7 +52,7 @@ Resources:
   EC22:
     Type: AWS::EC2::Instance
     Properties: 
-      ImageId: ami-09b333b07b596e8d1
+      ImageId: ami-027b3102a9753d58d
       LaunchTemplate: 
         LaunchTemplateId: !Ref LaunchTemplate
         Version: 1
