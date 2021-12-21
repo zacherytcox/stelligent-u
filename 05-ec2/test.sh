@@ -224,6 +224,11 @@ do
 done
 
 
+eip=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack-name $STACKNAME --max-items 1 | jq -r '.[]' | jq -r '.[].Outputs'| jq -r '.[] | select(.OutputKey=="EIP") | .OutputValue')
+
+ping -c 4 $eip
+
+ssh ubuntu@$eip -i ./zacherycox.pem
 
 read -p "Complete: Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
 

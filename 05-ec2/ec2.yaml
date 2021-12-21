@@ -22,6 +22,8 @@ Resources:
       LaunchTemplateData: 
         InstanceType: !Ref InstanceType
         KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !GetAtt SecurityGroup.GroupId
         TagSpecifications: 
           - ResourceType: instance
             Tags: 
@@ -45,14 +47,16 @@ Resources:
               Value: !Ref TagLab
             - Key: Name
               Value: !Ref TagUser
+    DependsOn:
+      - SecurityGroup
 
-  EC2:
-    Type: AWS::EC2::Instance
-    Properties: 
-      ImageId: !Ref WinAMI
-      LaunchTemplate: 
-        LaunchTemplateId: !Ref LaunchTemplate
-        Version: 1
+  # EC2:
+  #   Type: AWS::EC2::Instance
+  #   Properties: 
+  #     ImageId: !Ref WinAMI
+  #     LaunchTemplate: 
+  #       LaunchTemplateId: !Ref LaunchTemplate
+  #       Version: 1
   EC22:
     Type: AWS::EC2::Instance
     Properties: 
@@ -60,26 +64,39 @@ Resources:
       LaunchTemplate: 
         LaunchTemplateId: !Ref LaunchTemplate
         Version: 1
-
-  # SecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties: 
-  #     GroupDescription: SecurityGroup
-  #     GroupName: ZachSG
-  #     SecurityGroupIngress:
-  #       - IpProtocol: icmp
-  #         FromPort: 8
-  #         ToPort: -1
-  #         CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
-  #       - IpProtocol: tcp
-  #         FromPort: 22
-  #         ToPort: 22
-  #         CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
-  #     Tags:  
-  #       - Key: user
-  #         Value: !Ref TagUser
-  #       - Key: stelligent-u-lesson
-  #         Value: !Ref TagLesson
-  #       - Key: stelligent-u-lab
-  #         Value: !Ref TagLab
-  #     VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties: 
+      InstanceId: !Ref EC22
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      GroupName: ZachSG
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+Outputs:
+  EIP:
+    Description: EIP
+    Value: !Ref  EIP

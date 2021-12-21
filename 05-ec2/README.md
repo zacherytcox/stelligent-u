@@ -202,6 +202,7 @@ function.
   IPV4 address.
 
 Try pinging that IP address. Does it work?
+>No. The default security group does not allow ping from my ip.
 
 - Using the CFN template, create a Security Group enabling
   [ICMP](https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol).
@@ -241,6 +242,7 @@ Can you SSH into the instance?
 
 Now can you SSH into your instance? If not, troubleshoot and fix the
 issue using your CFN template.
+> Yes I can.
 
 ### Retrospective 5.2
 
