@@ -318,6 +318,7 @@ Userdata docs to debug.
 
 Compare those same metrics with the values received from Lab 5.3.1.
 Record your results.
+>Images attached. There are more logs being ingested into CloudWatch Metrics.
 
 ##### Task: Private Subnet
 

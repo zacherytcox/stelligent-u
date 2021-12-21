@@ -109,13 +109,22 @@ Resources:
     DependsOn:
       - SecurityGroup
 
-  # EC2:
-  #   Type: AWS::EC2::Instance
-  #   Properties: 
-  #     ImageId: !Ref WinAMI
-  #     LaunchTemplate: 
-  #       LaunchTemplateId: !Ref LaunchTemplate
-  #       Version: 1
+  
+  
+  # Subnet:
+  #   Type: AWS::EC2::Subnet
+  #   Properties:
+  #     VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  #     CidrBlock: !Ref SubnetCIDR
+  #     Tags: 
+  #       - Key: user
+  #         Value: !Ref TagUser
+  #       - Key: stelligent-u-lesson
+  #         Value: !Ref TagLesson
+  #       - Key: stelligent-u-lab
+  #         Value: !Ref TagLab
+  #       - Key: Name
+  #         Value: PrivateSubnet
   EC22:
     Type: AWS::EC2::Instance
     Properties: 
