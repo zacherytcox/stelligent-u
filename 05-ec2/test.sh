@@ -120,8 +120,8 @@ create_stack () {
         then
             print_style  "Creating Stack $1..." "info"
             stackid=$(aws cloudformation create-stack --stack-name $1 --profile $profile --region $REGION --template-body $2 --capabilities CAPABILITY_NAMED_IAM --parameters "$3")
-            echo $stackid
-            echo $stackid | jq -r '.StackId'
+            # echo $stackid
+            # echo $stackid | jq -r '.StackId'
             aws --profile $profile --region $REGION cloudformation wait stack-create-complete --stack-name $(echo $stackid | jq -r '.StackId')
 
             if [[ "$?" != '0' ]]
@@ -181,6 +181,43 @@ if [[ "$?" != '0' ]]
 fi
 chmod 400 zacherycox.pem
 
+cw_config='''
+{
+	"agent": {
+		"metrics_collection_interval": 60,
+		"run_as_user": "root"
+	},
+	"metrics": {
+		"metrics_collected": {
+			"collectd": {
+				"metrics_aggregation_interval": 60
+			},
+			"disk": {
+				"measurement": [
+					"used_percent"
+				],
+				"metrics_collection_interval": 60,
+				"resources": [
+					"*"
+				]
+			},
+			"mem": {
+				"measurement": [
+					"mem_used_percent"
+				],
+				"metrics_collection_interval": 60
+			},
+			"statsd": {
+				"metrics_aggregation_interval": 60,
+				"metrics_collection_interval": 10,
+				"service_address": ":8125"
+			}
+		}
+	}
+}
+'''
+
+
 
 windows_ami=$(aws --profile $PROFILE --region $REGION ec2 describe-images --owners 'amazon' --filters 'Name=name,Values=Windows_Server-2012-R2_RTM-English-64Bit-Base*' --query 'sort_by(Images, &CreationDate)[-1].[ImageId]' | jq -r '.[]')
 
@@ -189,9 +226,9 @@ ubuntu_ami=$(aws --profile $PROFILE --region $REGION ec2 describe-images --owner
 this_params=$(cat ./params.json | jq -r ". += [{\"ParameterKey\": \"LinAMI\",\"ParameterValue\": \"$ubuntu_ami\"},{\"ParameterKey\": \"WinAMI\",\"ParameterValue\": \"$windows_ami\"}]")
 
 
-echo $ubuntu_ami
-echo $windows_ami
-echo "$this_params"
+# echo $ubuntu_ami 
+# echo $windows_ami
+# echo "$this_params"
 create_stack $STACKNAME $YAMLLOCATION "$(echo $this_params)"
 
 
@@ -231,6 +268,8 @@ ping -c 4 $eip
 ssh ubuntu@$eip -i ./zacherycox.pem
 
 read -p "Complete: Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
+
+# aws --profile $PROFILE --region $REGION ssm delete-parameter --name AmazonCloudWatch-ZachTest
 
 print_style  "Deleting Key Pair" "info"
 aws --profile $PROFILE --region $REGION ec2 delete-key-pair --key-name zacherycox

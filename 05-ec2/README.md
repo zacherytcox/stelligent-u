@@ -303,6 +303,7 @@ Userdata docs to debug.
 
   - Is it necessary to [apply monitoring scripts](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/mon-scripts.html)
     to send data to CloudWatch?
+    >No, not anymore. `The CloudWatch monitoring scripts are deprecated. We provide information about the monitoring scripts for customers who have not yet migrated from the deprecated monitoring scripts to the CloudWatch agent.` 
 
 - Create a new role that trusts the EC2 Service to assume it, and that
   has the privileges to perform whatever actions are necessary to
