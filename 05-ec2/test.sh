@@ -265,7 +265,7 @@ eip=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --s
 
 ping -c 4 $eip
 
-# ssh ubuntu@$eip -i ./zacherycox.pem
+ssh ubuntu@$eip -i ./zacherycox.pem
 
 read -p "Complete: Enter 1 to delete stack, anything else to exit: " policytype && [[ $policytype == [1] ]] || exit 1
 
