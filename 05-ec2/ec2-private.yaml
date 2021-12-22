@@ -108,6 +108,70 @@ Resources:
               Value: !Ref TagUser
     DependsOn:
       - SecurityGroup
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: vpc-0dc7fe3da867b9cb3
+  RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+      RouteTableId: !Ref RouteTable
+    DependsOn:
+      - RouteTable
+      - NATGateway
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      SubnetId: subnet-08afb647afaf0164d
+      AllocationId: !GetAtt EIP2.AllocationId
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+    DependsOn:
+      - EIP2
+  EIP2:
+    Type: AWS::EC2::EIP
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: vpc-0dc7fe3da867b9cb3
+      CidrBlock: 172.31.100.0/24
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: PrivateSubnet
   EC22:
     Type: AWS::EC2::Instance
     Properties: 
@@ -116,17 +180,6 @@ Resources:
       LaunchTemplate: 
         LaunchTemplateId: !Ref LaunchTemplate
         Version: 1
-  EIP:
-    Type: AWS::EC2::EIP
-    Properties: 
-      InstanceId: !Ref EC22
-      Tags: 
-        - Key: user
-          Value: !Ref TagUser
-        - Key: stelligent-u-lesson
-          Value: !Ref TagLesson
-        - Key: stelligent-u-lab
-          Value: !Ref TagLab
   SecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties: 

@@ -327,6 +327,8 @@ your template and add a new private subnet and launch your instance into
 this private subnet. Add any other services you need to be able to send
 metrics to CloudWatch from the instance in the private subnet.
 
+>Confirmed
+
 #### Lab 5.3.3: cfn-init
 
 User data itself is immensely useful for provisioning instances as
