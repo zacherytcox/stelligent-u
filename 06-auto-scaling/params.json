@@ -9,11 +9,11 @@
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "6.1.5"
+        "ParameterValue": "6.2.1"
     },
     {
         "ParameterKey": "InstanceType",
-        "ParameterValue": "t2.medium"
+        "ParameterValue": "t2.small"
     },
     {
         "ParameterKey": "KeyName",

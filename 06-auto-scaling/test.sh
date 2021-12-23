@@ -99,11 +99,8 @@ update_stack () {
     fi
 
  
-
     print_style  "Updating Stack $1..." "info"
     stackid=$(aws cloudformation update-stack --stack-name "$1" --profile $profile --region $REGION --template-body $2  --parameters "$3" --capabilities CAPABILITY_NAMED_IAM | jq -r '.StackId')
-
-    print_style  "$stackid" "background" 
 
     aws --profile $profile --region $REGION cloudformation wait stack-update-complete --stack-name $stackid
     if [[ "$?" != '0' ]]
@@ -216,6 +213,28 @@ tests () {
 
     print_style  "Describe Stack Events" "info"
     aws --profile $PROFILE --region $REGION cloudformation describe-stack-events --stack $STACKNAME | jq -r '.StackEvents' | jq -r '.[] | {LogicalResourceId, ResourceStatus, ResourceStatusReason}'
+
+    this_asg=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack-name $STACKNAME | jq -r '.StackResources | .[] | select(.ResourceType=="AWS::AutoScaling::AutoScalingGroup") | .PhysicalResourceId')
+    
+    this_instances=$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups --auto-scaling-group-names $this_asg | jq -r '.AutoScalingGroups | .[] | .Instances | .[].InstanceId')
+
+    print_style "$this_instances" "info"
+
+    aws --profile $PROFILE --region $REGION ec2 terminate-instances --instance-ids $this_instances
+
+    while true; do
+        print_style "$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups --auto-scaling-group-names $this_asg | jq -r '.AutoScalingGroups | .[] | .Instances | .[].InstanceId')" "info"
+        read -r -p "Enter 1 exit loop or Enter to try CLI call again: " answer
+        case $answer in
+            [1]* ) break;;
+            "" ) : ;;
+            * ) print_style  "Please answer 1 or Enter" "danger";;
+        esac
+    done
+
+    
+
+
 
     # this_instances=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::EC2::Instance") | .PhysicalResourceId')
 
