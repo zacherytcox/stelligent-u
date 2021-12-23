@@ -280,6 +280,7 @@ Take one of your instances [out of your ASG manually](http://docs.aws.amazon.com
 using the CLI. Observe Auto Scaling as it launches a replacement
 instance. Take note of what it does with the instance you marked
 unhealthy.
+>It created a new instance and once it is labeled "healthy", the AutoScaling Group placed the new instance "InService" and removed/terminated the instance I marked unhealthy.
 
 #### Lab 6.2.4: Troubleshooting Features
 

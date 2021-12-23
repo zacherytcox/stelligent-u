@@ -116,7 +116,7 @@ update_stack () {
                 case $answer in
                     [1]* ) delete_stack $stackid; exit 1; break;;
                     [2]* ) update_stack "$1" "$2" "$3" $profile; break;;
-                    [2]* ) exit 1;;
+                    [3]* ) exit 1;;
                     "" ) print_style  "Continue..." "background"; break;;
                     * ) echo "Please answer 1, 2, or Enter";;
                 esac
@@ -205,14 +205,14 @@ init () {
 #Perform Tests after stack creation
 tests () {
 
-    print_style  "Describe Stack" "info"
-    aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks'
+    # print_style  "Describe Stack" "info"
+    # aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks'
 
-    print_style  "Describe Stack Resources" "info"
-    aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | {LogicalResourceId, ResourceType, ResourceStatus, DriftInformation}'
+    # print_style  "Describe Stack Resources" "info"
+    # aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | {LogicalResourceId, ResourceType, ResourceStatus, DriftInformation}'
 
-    print_style  "Describe Stack Events" "info"
-    aws --profile $PROFILE --region $REGION cloudformation describe-stack-events --stack $STACKNAME | jq -r '.StackEvents' | jq -r '.[] | {LogicalResourceId, ResourceStatus, ResourceStatusReason}'
+    # print_style  "Describe Stack Events" "info"
+    # aws --profile $PROFILE --region $REGION cloudformation describe-stack-events --stack $STACKNAME | jq -r '.StackEvents' | jq -r '.[] | {LogicalResourceId, ResourceStatus, ResourceStatusReason}'
 
     this_asg=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack-name $STACKNAME | jq -r '.StackResources | .[] | select(.ResourceType=="AWS::AutoScaling::AutoScalingGroup") | .PhysicalResourceId')
     
@@ -220,20 +220,24 @@ tests () {
 
     print_style "$this_instances" "info"
 
-    aws --profile $PROFILE --region $REGION ec2 terminate-instances --instance-ids $this_instances
+    this_instance=`echo "${this_instances}" | head -1`
 
-    while true; do
-        print_style "$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups --auto-scaling-group-names $this_asg | jq -r '.AutoScalingGroups | .[] | .Instances | .[].InstanceId')" "info"
-        read -r -p "Enter 1 exit loop or Enter to try CLI call again: " answer
-        case $answer in
-            [1]* ) break;;
-            "" ) : ;;
-            * ) print_style  "Please answer 1 or Enter" "danger";;
-        esac
-    done
 
-    
+    aws --profile $PROFILE --region $REGION autoscaling set-instance-health --instance-id $this_instance --health-status Unhealthy
 
+
+
+    # aws --profile $PROFILE --region $REGION ec2 terminate-instances --instance-ids $this_instances
+
+    # while true; do
+    #     print_style "$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups --auto-scaling-group-names $this_asg | jq -r '.AutoScalingGroups | .[] | .Instances | .[].InstanceId')" "info"
+    #     read -r -p "Enter 1 exit loop or Enter to try CLI call again: " answer
+    #     case $answer in
+    #         [1]* ) break;;
+    #         "" ) : ;;
+    #         * ) print_style  "Please answer 1 or Enter" "danger";;
+    #     esac
+    # done
 
 
     # this_instances=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::EC2::Instance") | .PhysicalResourceId')
