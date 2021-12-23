@@ -312,6 +312,7 @@ now, so we can't exercise AddToLoadBalancer, but let's take a look at
 another. Disable Launch, then put an instance on standby and back in
 action again. Note the process you have to go through, including any
 commands you run.
+>My commands are within my `test.sh` file.
 
 ### Retrospective 6.2
 

@@ -1,5 +1,6 @@
 #!/bin/bash
 
+
 #Set parameters
 YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/06-auto-scaling/asg.yaml"
 YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/06-auto-scaling/params.json"
@@ -12,6 +13,7 @@ PROFILE="labs-mfa"
 # Launch template version. get latest and add it as a parameter
 # determine if an EC2 instance is created and if it is, create ssh key
 # determine if S3 buckets are being deleted, if so, empty them.
+
 
 
 # prints colored text
@@ -54,6 +56,27 @@ print_style () {
     ENDCOLOR="\e[0m";
 
     printf "$STARTCOLOR%b$ENDCOLOR\n" "$1";
+}
+
+package_check () {
+    aws --version;aws=$?
+    if [[ "$aws" != '0' ]]
+        then
+            print_style "aws is not installed! Please install and try again." "danger"
+            exit 1
+        else
+            print_style "aws installed" "success"
+    fi
+
+
+    jq --version;jq=$?
+    if [[ "$jq" != '0' ]]
+        then
+            print_style "jq is not installed! Please install and try again." "danger"
+            exit 1
+        else
+            print_style "jq installed" "success"
+    fi
 }
 
 #Delete CloudFormation Stack
@@ -223,7 +246,35 @@ tests () {
     this_instance=`echo "${this_instances}" | head -1`
 
 
-    aws --profile $PROFILE --region $REGION autoscaling set-instance-health --instance-id $this_instance --health-status Unhealthy
+    # First test
+    # aws --profile $PROFILE --region $REGION autoscaling enter-standby --instance-ids $this_instance --auto-scaling-group-name $this_asg --should-decrement-desired-capacity
+
+    # aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-instances --instance-ids $this_instance
+
+    # read -p "Test 1. Press anything to continue" temp && [[ $temp == [1] ]]
+
+    # aws --profile $PROFILE --region $REGION autoscaling exit-standby --instance-ids $this_instance --auto-scaling-group-name $this_asg   
+
+
+
+    #Second test
+    aws --profile $PROFILE --region $REGION autoscaling suspend-processes --auto-scaling-group-name $this_asg --scaling-processes Launch
+
+
+    aws --profile $PROFILE --region $REGION autoscaling enter-standby --instance-ids $this_instance --auto-scaling-group-name $this_asg --should-decrement-desired-capacity
+
+    aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-instances --instance-ids $this_instance
+
+    read -p "Test 2. Press anything to continue" temp && [[ $temp == [1] ]]
+
+    aws --profile $PROFILE --region $REGION autoscaling resume-processes --auto-scaling-group-name $this_asg --scaling-processes Launch
+
+    aws --profile $PROFILE --region $REGION autoscaling exit-standby --instance-ids $this_instance --auto-scaling-group-name $this_asg  
+
+
+
+
+
 
 
 
@@ -272,6 +323,9 @@ tests () {
 
 }
 
+#Script Start
+package_check
+
 #Function to delete all stacks
 if [[ "$1" == 'delete' ]]
     then
@@ -283,6 +337,7 @@ if [[ "$1" == 'sts' ]]
     then
         assume_role
 fi
+
 
 #Main Loop
 while true; do
