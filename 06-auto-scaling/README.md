@@ -104,13 +104,19 @@ Group (ASG): [ask Amazon to create one for us from a running instance](https://d
 
 - Limit the ASG to a single instance at all times.
 
+>aws autoscaling create-auto-scaling-group --auto-scaling-group-name my-asg-from-instance  --instance-id <> --min-size 1 --max-size 1 --desired-capacity 1
+
 ##### Question: Resources
 
 _What was created in addition to the new Auto Scaling Group?_
+>A new EC2 instance and Launch Configuration
+
+>aws --profile labs-mfa --region us-east-1 autoscaling describe-launch-configurations --launch-configuration-names my-asg-from-instance
 
 ##### Question: Parameters
 
 _What parameters did Amazon record in the resources it created for you?_
+>Subnet, AMI, Instance Type, and Security Group
 
 #### Lab 6.1.2: Launch Config and ASG in CFN
 
@@ -134,6 +140,7 @@ created for you in Lab 6.1.1.
 
 _What config info or resources did you have to create explicitly that Amazon
 created for you when launching an ASG from an existing instance?_
+>Launch Configuration object.
 
 #### Lab 6.1.3: Launch Config Changes
 
@@ -143,12 +150,14 @@ t2.small. Update your stack.
 ##### Question: Stack Updates
 
 _After updating your stack, did your running instance get replaced or resized?_
+>It didnt do anything to it. I believe you have to run an `instance refresh`.
 
 Terminate the instance in your ASG.
 
 ##### Question: Replacement Instance
 
 _Is the replacement instance the new size or the old?_
+>New size
 
 #### Lab 6.1.4: ASG Update Policy
 
@@ -162,10 +171,12 @@ type to t2.medium. Update your stack.
 
 _After updating, what did you see change? Did your running instance get
 replaced this time?_
+>Yes and Yes
 
 ##### Question: Launch Config
 
 _Did the launch config change or was it replaced?_
+>It was replaced (had a conflict with the replacement because I used a custom name)
 
 #### Lab 6.1.5: Launch Template
 
@@ -177,6 +188,7 @@ parameters you need to.
 
 _What config info or resources do you have to provide in addition to what
 Launch Configurations require?_
+>Nothing additional was provided. I was able to copy and paste parameters in the CloudFormation template.
 
 You'll see both launch configs and launch templates in your client
 engagements. Templates were [introduced in Nov 2017](https://aws.amazon.com/about-aws/whats-new/2017/11/introducing-launch-templates-for-amazon-ec2-instances/)
