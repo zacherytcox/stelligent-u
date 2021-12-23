@@ -200,6 +200,11 @@ assume_role () {
     aws configure set aws_session_token $(echo $creds | jq -r '.Credentials.SessionToken') --profile test
 }
 
+#Performs tasks before tests can be performed
+init () {
+    :
+}
+
 #Perform Tests after stack creation
 tests () {
 

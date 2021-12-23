@@ -206,6 +206,7 @@ associated with those. Then tear your stack down.
 
 _After you tear down the stack, do all the associated resources go away?
 What's left?_
+>Yes, all was deleted that I can tell.
 
 ### Retrospective 6.1
 
