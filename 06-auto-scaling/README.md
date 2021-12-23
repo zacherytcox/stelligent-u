@@ -267,10 +267,12 @@ then update the stack.
 ##### Question: Desired Count
 
 _Did it work? If it didn't, what else do you have to increase?_
+>Initially I changed the `desired` field, but not the limit. That caused an error within the CloudFormation stack. I then changed the `maxsize` to 3. Afterwards, it worked.
 
 ##### Question: Update Delay
 
 _How quickly after your stack update did you see the ASG change?_
+> Within 1min.
 
 #### Lab 6.2.3: Manual Interference
 

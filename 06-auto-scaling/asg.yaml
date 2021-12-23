@@ -67,7 +67,8 @@ Resources:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: !Ref myLaunchTemplateVersionNumber
       MinSize: "1"
-      MaxSize: "1"
+      MaxSize: "3"
+      DesiredCapacity: "3"
       AvailabilityZones:
         - us-east-1a
         - us-east-1b
