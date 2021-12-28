@@ -68,6 +68,7 @@ many instances with an ALB.
 
 _What is the benefit of breaking up the load balancer into specific listeners
 and target groups?_
+>It's a great benefit because you can have different groups of EC2 instances (or other AWS Resources) that can handle different types of tasks based on the path in the URL.
 
 #### Lab 7.1.2: Health Checks
 

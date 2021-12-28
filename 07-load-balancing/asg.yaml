@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create VPCs for Lab 6.
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: String
+  LinAMI:
+    Type: String
+  myLaunchTemplateVersionNumber:
+    Type: String
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData: 
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        ImageId: !Ref LinAMI
+        SecurityGroupIds:
+          - !GetAtt SecurityGroup.GroupId
+        TagSpecifications: 
+          - ResourceType: instance
+            Tags: 
+              - Key: user
+                Value: !Ref TagUser
+              - Key: stelligent-u-lesson
+                Value: !Ref TagLesson
+              - Key: stelligent-u-lab
+                Value: !Ref TagLab
+              - Key: Name
+                Value: !Ref TagUser
+      LaunchTemplateName: !Ref TagUser
+      TagSpecifications: 
+        - ResourceType: launch-template
+          Tags: 
+            - Key: user
+              Value: !Ref TagUser
+            - Key: stelligent-u-lesson
+              Value: !Ref TagLesson
+            - Key: stelligent-u-lab
+              Value: !Ref TagLab
+            - Key: Name
+              Value: !Ref TagUser
+    DependsOn:
+      - SecurityGroup
+  # LaunchConfig:
+  #   Type: AWS::AutoScaling::LaunchConfiguration
+  #   Properties: 
+  #     ImageId: !Ref LinAMI
+  #     InstanceType: !Ref InstanceType
+  #     KeyName: !Ref KeyName
+  #     SecurityGroups: 
+  #       - !Ref SecurityGroup
+      
+  AutoGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties: 
+      # LaunchConfigurationName: !Ref LaunchConfig
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !Ref myLaunchTemplateVersionNumber
+      MinSize: "1"
+      MaxSize: "3"
+      DesiredCapacity: "3"
+      AvailabilityZones:
+        - us-east-1a
+        - us-east-1b
+        - us-east-1c
+        - us-east-1d
+        - us-east-1e
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+          PropagateAtLaunch: "true"
+        - Key: Name
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+    UpdatePolicy:
+      AutoScalingReplacingUpdate:
+        WillReplace: True
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      # GroupName: ZachSG
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
