@@ -92,10 +92,12 @@ haywire!
 
 _What can be controlled with the interval/healthy threshold/unhealthy threshold
 settings?_
+> With these three settings, you can control the number of successful and failed consecutive health checks for the instances within the Target Group. The Interval setting specifies the amount of seconds between healthchecks for all instances within the Target Group.
 
 ##### Question: ASG Behavior
 
 _What's happening to the instances in the ASG? How do you know?_
+>EC2 instances are being terminated based on an "unhealthy" health status. From the `Activity` log within the Autoscaling group, I am able to see events that are affecting my Target Group.I am also able to confirm by reviewing the fields that we changed.
 
 #### Lab 7.1.3: Secure Sockets
 

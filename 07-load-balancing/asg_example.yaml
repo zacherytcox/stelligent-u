@@ -123,7 +123,13 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties: 
       HealthCheckEnabled: True
-      HealthCheckPath: /index.html
+      HealthCheckPath: /BADindex.html
+      HealthCheckIntervalSeconds: 20
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      TargetGroupAttributes: 
+        - Key: deregistration_delay.timeout_seconds
+          Value: 20
       Port: 80
       Protocol: HTTP
       Tags:  

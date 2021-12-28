@@ -280,6 +280,9 @@ init () {
 #Perform Tests after stack creation
 tests () {
 
+    #wait for 2mins
+    print_style  "Waiting 120 seconds..." "warning"
+    sleep 120
 
     this_asg_name=$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups | jq -r '.AutoScalingGroups | .[] | select(.LaunchConfigurationName=="SimpleWebServerLC-zach") | .AutoScalingGroupName')
     # aws --profile $PROFILE --region $REGION autoscaling start-instance-refresh --auto-scaling-group-name $this_asg_name --preferences '{"InstanceWarmup": 0, "MinHealthyPercentage": 0}'
