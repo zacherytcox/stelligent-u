@@ -8,6 +8,8 @@ Parameters:
     Type: String
   KeyName:
     Type: String
+  TLSCert:
+    Type: String
 Resources:
   WebServerAsg:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
@@ -112,6 +114,10 @@ Resources:
           FromPort: 80
           ToPort: 80
           CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -123,13 +129,10 @@ Resources:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties: 
       HealthCheckEnabled: True
-      HealthCheckPath: /BADindex.html
-      HealthCheckIntervalSeconds: 20
+      HealthCheckPath: /index.html
+      HealthCheckIntervalSeconds: 30
       HealthyThresholdCount: 2
       UnhealthyThresholdCount: 3
-      TargetGroupAttributes: 
-        - Key: deregistration_delay.timeout_seconds
-          Value: 20
       Port: 80
       Protocol: HTTP
       Tags:  
@@ -165,3 +168,15 @@ Resources:
       LoadBalancerArn: !Ref ALB
       Port: 80
       Protocol: HTTP
+  ALBListener2:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-FS-1-2-Res-2020-10
+      Certificates:
+        - CertificateArn: !Ref TLSCert

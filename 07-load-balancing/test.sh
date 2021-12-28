@@ -7,7 +7,7 @@ YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u
 STACKNAME="lab7-zach"
 REGION="us-east-1"
 PROFILE="labs-mfa"
-
+LOCAL_STATE="./.test.state.txt"
 
 #automate todo
 # Launch template version. get latest and add it as a parameter
@@ -59,6 +59,25 @@ print_style () {
     printf "$STARTCOLOR%b$ENDCOLOR\n" "$1";
 }
 
+add_state (){
+    #key, value
+    print_style "$(cat $LOCAL_STATE)" "background" 
+    echo $(cat $LOCAL_STATE | jq ". + {\"$1\": \"$2\"}") > $LOCAL_STATE
+    print_style "$(cat $LOCAL_STATE)" "background" 
+}
+
+remove_state (){
+    #key
+    print_style "$(cat $LOCAL_STATE)" "background" 
+    echo $(cat $LOCAL_STATE | jq -r "del(.$1)") > $LOCAL_STATE
+    print_style "$(cat $LOCAL_STATE)" "background" 
+}
+
+get_state (){
+    #key
+    echo $(cat $LOCAL_STATE | jq -r ".$1")
+}
+
 package_check () {
     aws --version;aws=$?
     if [[ "$aws" != '0' ]]
@@ -80,6 +99,64 @@ package_check () {
     fi
 }
 
+#Performs tasks before tests can be performed
+create_tls_cert () {
+    print_style  "TLS Cert Creation" "background"
+    openssl req -newkey rsa:2048 -nodes -keyout key.pem -x509 -days 365 -out certificate.pem -subj "/C=''/ST=''/L=''/O=''/OU=''/CN=*.amazonaws.com"
+    openssl pkcs12 -inkey key.pem -in certificate.pem -export -out certificate.p12
+
+    add_state cert "$(aws --profile $PROFILE --region $REGION acm import-certificate --certificate fileb://Certificate.pem --private-key fileb://Key.pem --tags Key=Name,Value=$STACKNAME | jq -r '.CertificateArn')"
+
+
+}
+
+#Performs tasks before tests can be performed
+init () {
+    
+    print_style  "Creating local state file..." "background"
+    if [ -f "$LOCAL_STATE" ];
+        then
+            print_style  "local state file exists." "background"
+        else 
+            echo "{}" > $LOCAL_STATE
+    fi
+
+
+    print_style  "Key Pair Creation..." "background"
+    aws --profile $PROFILE --region $REGION ec2 describe-key-pairs --key-name zacherycox
+    if [[ "$?" != '0' ]]
+        then
+            print_style  "Creating Key Pair..." "background"
+            chmod 744 ./zacherycox.pem
+            aws --profile $PROFILE --region $REGION ec2 create-key-pair --key-name zacherycox | jq -r '.KeyMaterial' > zacherycox.pem
+    fi
+    chmod 400 zacherycox.pem
+
+    read -r -p "Enter 1 to create a TLS cert or Enter to continue: " answer
+    case $answer in
+        [1]* ) create_tls_cert;;
+        "" ) print_style  "TLS Cert Not Created..." "background";;
+        * ) print_style  "Please answer 1 or Enter" "danger";;
+    esac
+
+
+}
+
+#Deletes resources created by the init
+init_delete () {
+    print_style  "Deleting Key Pair" "background"
+    aws --profile $PROFILE --region $REGION ec2 delete-key-pair --key-name zacherycox
+    rm -rf ./zacherycox.pem
+
+    print_style  "Deleting Self-Signed TLS Cert" "background"    
+    rm -rf ./certificate* ./key.pem
+
+    get_state cert
+    aws --profile $PROFILE --region $REGION acm delete-certificate --certificate-arn "$(get_state cert)"
+
+    rm $LOCAL_STATE
+}
+
 #Delete CloudFormation Stack
 delete_stack () {
 
@@ -90,9 +167,7 @@ delete_stack () {
             stack=$1
     fi
 
-    print_style  "Deleting Key Pair" "background"
-    aws --profile $PROFILE --region $REGION ec2 delete-key-pair --key-name zacherycox
-    rm -rf ./zacherycox.pem
+    init_delete
 
     print_style  "Deleting Stack..." "danger"
 
@@ -122,9 +197,11 @@ update_stack () {
             profile=$4
     fi
 
+
+    this_params=$(cat ./params.json | jq -r ". += [{\"ParameterKey\": \"TLSCert\",\"ParameterValue\": \"$(get_state cert)\"}]")
  
     print_style  "Updating Stack $1..." "info"
-    stackid=$(aws cloudformation update-stack --stack-name "$1" --profile $profile --region $REGION --template-body $2  --parameters "$3" --capabilities CAPABILITY_NAMED_IAM | jq -r '.StackId')
+    stackid=$(aws cloudformation update-stack --stack-name "$1" --profile $profile --region $REGION --template-body $2  --parameters "$this_params" --capabilities CAPABILITY_NAMED_IAM | jq -r '.StackId')
 
     aws --profile $profile --region $REGION cloudformation wait stack-update-complete --stack-name $stackid
     if [[ "$?" != '0' ]]
@@ -159,22 +236,17 @@ create_stack () {
             profile=$4
     fi
 
-    print_style  "Key Pair Creation" "background"
-    aws --profile $PROFILE --region $REGION ec2 describe-key-pairs --key-name zacherycox
-    if [[ "$?" != '0' ]]
-        then
-            print_style  "Creating Key Pair..." "background"
-            chmod 744 ./zacherycox.pem
-            aws --profile $PROFILE --region $REGION ec2 create-key-pair --key-name zacherycox | jq -r '.KeyMaterial' > zacherycox.pem
-    fi
-    chmod 400 zacherycox.pem
+    init
+
+
+    this_params=$(cat ./params.json | jq -r ". += [{\"ParameterKey\": \"TLSCert\",\"ParameterValue\": \"$(get_state cert)\"}]")
 
     aws --profile $profile --region $REGION cloudformation describe-stacks --stack-name "$1" --max-items 1 
 
     if [[ "$?" != '0' ]]
         then
             print_style  "Creating Stack $1..." "info"
-            stackid=$(aws cloudformation create-stack --stack-name $1 --profile $profile --region $REGION --template-body $2 --capabilities CAPABILITY_NAMED_IAM --parameters "$3")
+            stackid=$(aws cloudformation create-stack --stack-name $1 --profile $profile --region $REGION --template-body $2 --capabilities CAPABILITY_NAMED_IAM --parameters "$this_params")
 
             aws --profile $profile --region $REGION cloudformation wait stack-create-complete --stack-name $(echo $stackid | jq -r '.StackId')
 
@@ -195,7 +267,7 @@ create_stack () {
                         read -r -p "[$status] Issues exist. Enter 1 to delete the stack, 2 to try updating, 3 to exit, Enter to continue: " answer
                         case $answer in
                             [1]* ) delete_stack $1; exit 1; break;;
-                            [2]* ) update_stack "$1" "$2" "$3" $profile; break;;
+                            [2]* ) update_stack "$1" "$2" "$this_params" $profile; break;;
                             [3]* ) exit 1;;
                             "" ) print_style  "Continue..." "background"; break;;
                             * ) echo "Please answer 1, 2, 3, or Enter";;
@@ -272,17 +344,12 @@ troubleshoot_init () {
     print_style  "Finished troubleshooting Cloud-init [$1]" "success"
 }
 
-#Performs tasks before tests can be performed
-init () {
-    :
-}
-
 #Perform Tests after stack creation
 tests () {
 
     #wait for 2mins
-    print_style  "Waiting 120 seconds..." "warning"
-    sleep 120
+    # print_style  "Waiting 120 seconds..." "warning"
+    # sleep 120
 
     this_asg_name=$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups | jq -r '.AutoScalingGroups | .[] | select(.LaunchConfigurationName=="SimpleWebServerLC-zach") | .AutoScalingGroupName')
     # aws --profile $PROFILE --region $REGION autoscaling start-instance-refresh --auto-scaling-group-name $this_asg_name --preferences '{"InstanceWarmup": 0, "MinHealthyPercentage": 0}'
@@ -291,8 +358,8 @@ tests () {
 
     this_instance_pub_ip=$(aws --profile $PROFILE --region $REGION ec2 describe-instances --instance-ids $this_instance_id | jq -r '.Reservations | .[] | .Instances | .[].PublicIpAddress')
 
-    print_style  "Waiting 60 seconds for Nginx to launch. May take longer..." "warning"
-    sleep 60
+    # print_style  "Waiting 60 seconds for Nginx to launch. May take longer..." "warning"
+    # sleep 60
 
     while true; do
         this_response=$(curl $this_instance_pub_ip)
@@ -301,7 +368,7 @@ tests () {
         if [[ "$this_response" != '<p>Automation for the People</p>' ]]
             then
                 print_style  "Waiting for NGINX to launch...\n $this_status" "background"
-                sleep 30
+                sleep 3
             else
                 print_style "NGINX is up!" "success"
                 break
@@ -347,7 +414,9 @@ fi
 
 #Main Loop
 while true; do
+
     create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
+
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, Enter to exit: " answer
     case $answer in

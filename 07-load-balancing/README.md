@@ -124,11 +124,13 @@ Let's fix that bad health check endpoint and add an https listener.
 ##### Question: SSL Policy
 
 _What is the trade off of going with a more secure SSL policy?_
+>Some legacy clients may not support newer encryption protocols and may rely on older protocols (that may not be included in the more secure SSL policies).
 
 ##### Question: Certificate Management
 
 _We imported a local certificate into ACM, what other options do you have? How
 do those processes work?_
+>We could also use ACM to create a certificate there and specify it when we create the ELB.
 
 #### Lab 7.1.4: Cleanup
 
@@ -141,6 +143,9 @@ do those processes work?_
 
 Discuss with your mentor: *What are some of the common cloud architectures
 where you would want to implement an ALB?*
+>Architectures that have lots of web traffic coming from a single URL and there is a need to handle/process every request.
+>Architectures that include microservices or serverless and will require a different destination based on the `path` in the URL.
+>Architectures where there are requirements for routing requests to several applications within a single EC2 instance.
 
 ## Further reading
 
