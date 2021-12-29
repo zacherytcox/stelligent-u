@@ -5,15 +5,23 @@
     },
     {
         "ParameterKey": "TagLesson",
-        "ParameterValue": "07"
+        "ParameterValue": "08"
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "7.1.3"
+        "ParameterValue": "8.1.4"
     },
     {
         "ParameterKey": "KeyName",
         "ParameterValue": "zacherycox"
+    },
+    {
+        "ParameterKey": "VPCID",
+        "ParameterValue": "vpc-0a7bd3f082973f0e0"
+    },
+    {
+        "ParameterKey": "SubnetID",
+        "ParameterValue": "subnet-0aaa8295d2fa1e3e4"
     }
     
 ]

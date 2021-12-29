@@ -2,7 +2,7 @@
 
 
 #Set parameters
-YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/08-cloudwatch-logs/8.1.2.yaml"
+YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/08-cloudwatch-logs/8.1.2.yml"
 YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/08-cloudwatch-logs/params.json"
 STACKNAME="lab8-zach"
 REGION="us-east-1"
@@ -132,12 +132,18 @@ init () {
     fi
     chmod 400 zacherycox.pem
 
-    read -r -p "Enter 1 to create a TLS cert or Enter to continue: " answer
-    case $answer in
-        [1]* ) create_tls_cert;;
-        "" ) print_style  "TLS Cert Not Created..." "background";;
-        * ) print_style  "Please answer 1 or Enter" "danger";;
-    esac
+    # read -r -p "Enter 1 to create a TLS cert or Enter to continue: " answer
+    # case $answer in
+    #     [1]* ) create_tls_cert;;
+    #     "" ) print_style  "TLS Cert Not Created..." "background";;
+    #     * ) print_style  "Please answer 1 or Enter" "danger";;
+    # esac
+
+    aws --profile $PROFILE --region $REGION logs create-log-group --log-group-name "zach.cox.c9logs"
+    aws --profile $PROFILE --region $REGION logs create-log-stream --log-group-name "zach.cox.c9logs" --log-stream-name "c9.training"
+
+    aws --profile $PROFILE --region $REGION logs describe-log-groups --log-group-name-prefix "zach.cox.c9logs"
+    aws --profile $PROFILE --region $REGION logs describe-log-streams --log-group-name "zach.cox.c9logs" --log-stream-name-prefix "c9.training"
 
 
 }
@@ -155,6 +161,9 @@ init_delete () {
     aws --profile $PROFILE --region $REGION acm delete-certificate --certificate-arn "$(get_state cert)"
 
     rm $LOCAL_STATE
+
+    aws --profile $PROFILE --region $REGION logs delete-log-stream --log-group-name "zach.cox.c9logs" --log-stream-name "c9.training"
+    aws --profile $PROFILE --region $REGION logs delete-log-group --log-group-name "zach.cox.c9logs"
 }
 
 #Delete CloudFormation Stack
@@ -343,23 +352,13 @@ troubleshoot_init () {
 #Perform Tests after stack creation
 tests () {
 
-
-    #8.1.1
-    aws --profile $PROFILE --region $REGION logs create-log-group --log-group-name "zach.cox.c9logs"
-    aws --profile $PROFILE --region $REGION logs create-log-stream --log-group-name "zach.cox.c9logs" --log-stream-name "c9.training"
-
-    aws --profile $PROFILE --region $REGION logs describe-log-groups --log-group-name-prefix "zach.cox.c9logs"
-    aws --profile $PROFILE --region $REGION logs describe-log-streams --log-group-name "zach.cox.c9logs" --log-stream-name-prefix "c9.training"
+    aws --profile $PROFILE --region $REGION logs put-retention-policy --log-group-name "zach.cox.c9logs" --retention-in-days 3653
 
 
-    read -r -p "Press enter to continue... " answer
-    case $answer in
-        * ) : ;;
-    esac
-
-    aws --profile $PROFILE --region $REGION logs delete-log-stream --log-group-name "zach.cox.c9logs" --log-stream-name "c9.training"
-    aws --profile $PROFILE --region $REGION logs delete-log-group --log-group-name "zach.cox.c9logs"
+    this_ip=$(aws --profile $PROFILE --region $REGION ec2 describe-instances --instance-ids $(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::EC2::Instance") | .PhysicalResourceId') | jq -r '.Reservations | .[].Instances | .[] | .PublicIpAddress')
     
+    ssh ubuntu@$this_ip -i ./zacherycox.pem "amazon-cloudwatch-agent-ctl -a status"
+    # ssh ubuntu@$this_ip -i ./zacherycox.pem
 
 
     #wait for 2mins
@@ -430,7 +429,7 @@ fi
 #Main Loop
 while true; do
 
-    # create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
+    create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, Enter to exit: " answer
     case $answer in
