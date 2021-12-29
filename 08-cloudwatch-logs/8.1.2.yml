@@ -7,6 +7,12 @@ Parameters:
     Type: 'AWS::EC2::VPC::Id'
   SubnetID:
     Type: 'AWS::EC2::Subnet::Id'
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
 Resources:
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -21,6 +27,15 @@ Resources:
           - DeviceIndex: 0
             AssociatePublicIpAddress: True
             SubnetId: !Ref SubnetID
+      Tags: 
+          - Key: user
+            Value: !Ref TagUser
+          - Key: stelligent-u-lesson
+            Value: !Ref TagLesson
+          - Key: stelligent-u-lab
+            Value: !Ref TagLab
+          - Key: Name
+            Value: !Ref TagUser
         UserData:
           Fn::Base64: !Sub |
             #!/bin/bash -xe
