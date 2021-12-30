@@ -131,6 +131,12 @@ Resources:
               - logs:PutLogEvents
               Resource:
               - '*'
+            - Sid: temp
+              Effect: Allow
+              Action:
+              - sns:*
+              Resource:
+              - '*'
           PolicyName: Policy
       RoleName: zachcttrailtestrole
       Tags: 
@@ -140,17 +146,26 @@ Resources:
           Value: !Ref TagLesson
         - Key: stelligent-u-lab
           Value: !Ref TagLab
-  # Event:
-  #   Type: AWS::Events::Rule
-  #   Properties: 
-  #     source:
-  #     - aws.ec2
-  #     detail-type:
-  #     - AWS API Call via CloudTrail
-  #     detail:
-  #       eventSource:
-  #       - ec2.amazonaws.com
-  #     Targets: 
-  #       - Arn: TODO!
-  #         Id: String123432
-  #         RoleArn: !GetAtt IAMRole.Arn
+  Event:
+    Type: AWS::Events::Rule
+    Properties: 
+      EventPattern:
+        source:
+        - aws.ec2
+        detail-type:
+        - AWS API Call via CloudTrail
+        detail:
+          eventSource:
+          - ec2.amazonaws.com
+      Targets: 
+        - Arn: !Ref SNS
+          Id: String123432
+          # RoleArn: !GetAtt IAMRole.Arn
+  SNS:
+    Type: AWS::SNS::Topic
+  SNSSub:
+    Type: AWS::SNS::Subscription
+    Properties: 
+      Protocol: email
+      TopicArn: !Ref SNS
+      Endpoint: zachery.cox@stelligent.com
