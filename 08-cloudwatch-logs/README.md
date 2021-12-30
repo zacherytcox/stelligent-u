@@ -204,6 +204,7 @@ for the resources that will use it:
 _What type of events might be important to track in an AWS account? If
 you were automating mitigating actions for the events, what might they
 be and what AWS resource(s) would you use?_
+>Changing Root user settings, changing billing settings, deleting important key resources (CloudTrail, Config, GuardDuty, etc.), and creating high cost resources.
 
 #### Task
 

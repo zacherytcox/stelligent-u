@@ -1,0 +1,156 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  UbuntuAMI:
+    Type: String
+    Default: '/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+  VPCID:
+    Type: String
+  SubnetID:
+    Type: String
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref Bucket
+      PolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Sid: AWSCloudTrailAclCheck20150319
+          Effect: Allow
+          Principal:
+            Service: cloudtrail.amazonaws.com
+          Action: s3:GetBucketAcl
+          Resource: 
+            !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref Bucket
+        - Sid: AWSCloudTrailWrite20150319
+          Effect: Allow
+          Principal:
+            Service: cloudtrail.amazonaws.com
+          Action: s3:PutObject
+          Resource:
+            !Join
+              - ''
+              - - 'arn:aws:s3:::'
+                - !Ref Bucket
+                - '/AWSLogs/'
+                - !Ref AWS::AccountId
+                - '/*'
+          Condition:
+            StringEquals:
+              s3:x-amz-acl: bucket-owner-full-control
+              aws:SourceArn: 
+                !Join
+                  - ''
+                  - - 'arn:aws:cloudtrail:'
+                    - !Ref AWS::Region
+                    - ':'
+                    - !Ref AWS::AccountId
+                    - ':trail/'
+                    - 'zachcttrailtest'
+  CloudTrail:
+    Type: AWS::CloudTrail::Trail
+    DependsOn:
+      - Bucket
+      - BucketPolicy
+    Properties: 
+      TrailName: zachcttrailtest
+      CloudWatchLogsLogGroupArn: !GetAtt LogGroup.Arn
+      CloudWatchLogsRoleArn: !GetAtt IAMRole.Arn
+        # !Join
+        #   - ''
+        #   - - 'arn:aws:iam::'
+        #     - !Ref AWS::AccountId
+        #     - ':role/CloudTrail_CloudWatchLogs_Role'
+      IsLogging: True
+      S3BucketName: !Ref Bucket
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Sid: ''
+          Effect: Allow
+          Principal:
+            Service: 
+              - cloudtrail.amazonaws.com
+              - events.amazonaws.com
+          Action: sts:AssumeRole
+      Description: String
+      Policies: 
+        - PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+            - Sid: AWSCloudTrailCreateLogStream20141101
+              Effect: Allow
+              Action:
+              - logs:CreateLogStream
+              Resource:
+              - '*'
+            - Sid: AWSCloudTrailPutLogEvents20141101
+              Effect: Allow
+              Action:
+              - logs:PutLogEvents
+              Resource:
+              - '*'
+          PolicyName: Policy
+      RoleName: zachcttrailtestrole
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  # Event:
+  #   Type: AWS::Events::Rule
+  #   Properties: 
+  #     source:
+  #     - aws.ec2
+  #     detail-type:
+  #     - AWS API Call via CloudTrail
+  #     detail:
+  #       eventSource:
+  #       - ec2.amazonaws.com
+  #     Targets: 
+  #       - Arn: TODO!
+  #         Id: String123432
+  #         RoleArn: !GetAtt IAMRole.Arn
