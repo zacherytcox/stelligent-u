@@ -1,0 +1,92 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  UbuntuAMI:
+    Type: String
+    Default: '/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+  VPCID:
+    Type: String
+  SubnetID:
+    Type: String
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Sid: ''
+          Effect: Allow
+          Principal:
+            Service: 
+              - lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Description: String
+      Policies: 
+        - PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+            - Sid: AWSCloudTrailCreateLogStream20141101
+              Effect: Allow
+              Action:
+              - lambda:*
+              Resource:
+              - '*'
+            - Sid: AWSCloudTrailPutLogEvents20141101
+              Effect: Allow
+              Action:
+              - logs:*
+              Resource:
+              - '*'
+          PolicyName: Policy
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Lambda:
+    Type: AWS::Lambda::Function
+    Properties: 
+      Code: 
+        ZipFile: |
+          import json
+          print('Loading function')
+          def lambda_handler(event, context):
+              return "Hello AWS" 
+      Role: !GetAtt IAMRole.Arn
+      Runtime: python3.7
+      Handler: index.lambda_handler
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Method:
+    Type: AWS::ApiGateway::Method
+    Properties: 
+      HttpMethod: GET
+      Integration: 
+        Integration
+      MethodResponses: 
+        - MethodResponse
+      OperationName: String
+      RequestModels: 
+        Key : Value
+      RequestParameters: 
+        Key : Value
+      RequestValidatorId: String
+      ResourceId: String
+      RestApiId: String
+  RESTAPI
+  DEPLOYMENT
