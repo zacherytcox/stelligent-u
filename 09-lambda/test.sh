@@ -357,51 +357,62 @@ troubleshoot_init () {
 #Perform Tests after stack creation
 tests () {
 
-    this_stack=zachstackname$RANDOM
-    this_bucket=zachs3buckettesting$RANDOM
-    aws --profile $PROFILE --region $REGION s3api create-bucket --bucket $this_bucket
+
+    # 9.1.3
+    # this_stack=zachstackname$RANDOM
+    # this_bucket=zachs3buckettesting$RANDOM
+    # aws --profile $PROFILE --region $REGION s3api create-bucket --bucket $this_bucket
     
-    aws --profile $PROFILE --region $REGION cloudformation package --template-file ./lambda.yaml --s3-bucket $this_bucket --output-template-file packaged-template.json
+    # aws --profile $PROFILE --region $REGION cloudformation package --template-file ./lambda.yaml --s3-bucket $this_bucket --output-template-file packaged-template.json
 
-    if [[ "$?" == '0' ]]
-        then
-            aws --profile $PROFILE --region $REGION cloudformation deploy --template-file ./packaged-template.json --stack-name $this_stack --capabilities CAPABILITY_NAMED_IAM --parameter-overrides "$YAMLPARAMSLOCATION"
-        else
-            print_style "$?" "danger"
-    fi
-
-
-    tmp=$RANDOM
-
-    api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $this_stack  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
-
-    api_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $this_stack  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayID") | .OutputValue')
-
-    this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body $tmp)
-
-    print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!") \n\n\n" "info"
-    print_style "Test 2 Results: $(echo $this_response | grep "$tmp")" "info"
+    # if [[ "$?" == '0' ]]
+    #     then
+    #         aws --profile $PROFILE --region $REGION cloudformation deploy --template-file ./packaged-template.json --stack-name $this_stack --capabilities CAPABILITY_NAMED_IAM --parameter-overrides "$YAMLPARAMSLOCATION"
+    #     else
+    #         print_style "$?" "danger"
+    # fi
 
 
-    
-
-    read -r -p "Enter to continue... " answer
-
-
-    aws --profile $PROFILE --region $REGION s3 rb --force s3://$this_bucket/
-    delete_stack $this_stack
-
-    #9.1.2
     # tmp=$RANDOM
 
-    # api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
+    # api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $this_stack  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
 
-    # api_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayID") | .OutputValue')
+    # api_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $this_stack  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayID") | .OutputValue')
 
     # this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body $tmp)
 
-    # print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!")" "info"
+    # print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!") \n\n\n" "info"
     # print_style "Test 2 Results: $(echo $this_response | grep "$tmp")" "info"
+
+
+    
+
+    # read -r -p "Enter to continue... " answer
+
+
+    # rm ./packaged-template.json
+    # aws --profile $PROFILE --region $REGION s3 rb --force s3://$this_bucket/
+    # delete_stack $this_stack
+
+    #9.1.2
+    tmp=$RANDOM
+
+    api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
+
+    api_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayID") | .OutputValue')
+
+    this_table=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::DynamoDB::Table") | .PhysicalResourceId')
+
+    print_style "Items in Table: $(aws --profile $PROFILE --region $REGION dynamodb scan --table-name $this_table)" "warning"
+
+    this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body "{\"Artist\":{\"S\":\"ThisTest$RANDOM\"},\"NumberOfSongs\":{\"N\":\"$tmp\"}}")
+
+    print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!")" "info"
+    print_style "Test 2 Results: $(echo $this_response | grep "$tmp")" "info"
+    print_style "Test 2 Results: $(echo $this_response | grep "ThisTest")" "info"
+
+
+    print_style "Items in Table: $(aws --profile $PROFILE --region $REGION dynamodb scan --table-name $this_table)" "warning"
 
 
     
@@ -508,8 +519,8 @@ fi
 
 #Main Loop
 while true; do
-    # init
-    # create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
+    init
+    create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, Enter to exit: " answer
     case $answer in

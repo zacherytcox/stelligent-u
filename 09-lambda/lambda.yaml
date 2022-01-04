@@ -43,6 +43,7 @@ Resources:
               Effect: Allow
               Action:
               - logs:*
+              - dynamodb:*
               Resource:
               - '*'
           PolicyName: Policy
@@ -56,21 +57,39 @@ Resources:
   Lambda:
     Type: AWS::Lambda::Function
     Properties: 
-      Code: /Users/zachery.cox/Documents/Code/Github/stelligent-u/09-lambda/
-        # |
-        #   import json
-        #   print('Loading function')
-        #   def lambda_handler(event, context):
-        #       return {
-        #         'body': 'WORKS!!! ' + str(event),
-        #         'headers': {
-        #           'Content-Type': 'application/json'
-        #         },
-        #         'statusCode': 200
-        #       } 
+      Code: 
+        ZipFile: |
+          import json
+          import boto3
+          client = boto3.client('dynamodb')
+          print('Loading function')
+          def lambda_handler(event, context):
+
+              this_table = None
+              tables = client.list_tables()
+              # print(tables['TableNames'])
+              for table in tables['TableNames']:
+                if table.startswith("lab9-zach-DynaDB"):
+                  print(table)
+                  this_table = table
+
+              response = client.put_item(
+                  TableName=this_table,
+                  Item=event
+              )
+                  
+
+
+              return {
+                'body': 'WORKS!!! ' + str(event),
+                'headers': {
+                  'Content-Type': 'application/json'
+                },
+                'statusCode': 200
+              } 
       Role: !GetAtt IAMRole.Arn
       Runtime: python3.7
-      Handler: HW.lambda_handler
+      Handler: index.lambda_handler
       Tags: 
         - Key: user
           Value: !Ref TagUser
@@ -119,6 +138,29 @@ Resources:
       RestApiId: !Ref RESTAPI
     DependsOn:
       - METHOD
+  DynaDB:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      KeySchema:
+        - AttributeName: Artist
+          KeyType: HASH
+        - AttributeName: NumberOfSongs
+          KeyType: RANGE
+      AttributeDefinitions: 
+        - AttributeName: "Artist"
+          AttributeType: "S"
+        - AttributeName: "NumberOfSongs"
+          AttributeType: "N"
+      ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
 Outputs:
   APIGatewayResourceId:
     Description: Data
