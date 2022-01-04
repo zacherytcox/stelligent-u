@@ -56,21 +56,21 @@ Resources:
   Lambda:
     Type: AWS::Lambda::Function
     Properties: 
-      Code: 
-        ZipFile: |
-          import json
-          print('Loading function')
-          def lambda_handler(event, context):
-              return {
-                'body': 'WORKS!!! ' + str(event),
-                'headers': {
-                  'Content-Type': 'application/json'
-                },
-                'statusCode': 200
-              } 
+      Code: /Users/zachery.cox/Documents/Code/Github/stelligent-u/09-lambda/
+        # |
+        #   import json
+        #   print('Loading function')
+        #   def lambda_handler(event, context):
+        #       return {
+        #         'body': 'WORKS!!! ' + str(event),
+        #         'headers': {
+        #           'Content-Type': 'application/json'
+        #         },
+        #         'statusCode': 200
+        #       } 
       Role: !GetAtt IAMRole.Arn
       Runtime: python3.7
-      Handler: index.lambda_handler
+      Handler: HW.lambda_handler
       Tags: 
         - Key: user
           Value: !Ref TagUser

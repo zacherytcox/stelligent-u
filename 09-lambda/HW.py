@@ -1,8 +1,10 @@
 import json
-
 print('Loading function')
-
-
 def lambda_handler(event, context):
-    #print("Received event: " + json.dumps(event, indent=2))
-    return "Hello AWS" 
+    return {
+    'body': 'WORKS!!! ' + str(event),
+    'headers': {
+        'Content-Type': 'application/json'
+    },
+    'statusCode': 200
+    } 
