@@ -61,7 +61,13 @@ Resources:
           import json
           print('Loading function')
           def lambda_handler(event, context):
-              return "Hello AWS" 
+              return {
+                'body': 'WORKS!!! ' + str(event),
+                'headers': {
+                  'Content-Type': 'application/json'
+                },
+                'statusCode': 200
+              } 
       Role: !GetAtt IAMRole.Arn
       Runtime: python3.7
       Handler: index.lambda_handler
@@ -72,21 +78,52 @@ Resources:
           Value: !Ref TagLesson
         - Key: stelligent-u-lab
           Value: !Ref TagLab
-  Method:
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt Lambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RESTAPI}/*/POST/
+  METHOD:
     Type: AWS::ApiGateway::Method
     Properties: 
-      HttpMethod: GET
-      Integration: 
-        Integration
-      MethodResponses: 
-        - MethodResponse
-      OperationName: String
-      RequestModels: 
-        Key : Value
-      RequestParameters: 
-        Key : Value
-      RequestValidatorId: String
-      ResourceId: String
-      RestApiId: String
-  RESTAPI
-  DEPLOYMENT
+      AuthorizationType: NONE
+      Integration:
+        IntegrationResponses: 
+          - StatusCode: 200
+        IntegrationHttpMethod: POST
+        Type: AWS
+        Uri: !Sub
+          - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+          - lambdaArn: !GetAtt Lambda.Arn
+      MethodResponses:
+        -  StatusCode: 200
+      HttpMethod: POST
+      ResourceId: !GetAtt RESTAPI.RootResourceId
+      RestApiId: !Ref RESTAPI
+  RESTAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties: 
+      Name: !Ref TagUser
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  DEPLOYMENT:
+    Type: AWS::ApiGateway::Deployment
+    Properties: 
+      RestApiId: !Ref RESTAPI
+    DependsOn:
+      - METHOD
+Outputs:
+  APIGatewayResourceId:
+    Description: Data
+    Value: !GetAtt RESTAPI.RootResourceId
+  APIGatewayID:
+    Description: Data
+    Value: !Ref RESTAPI
+   

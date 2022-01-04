@@ -357,8 +357,16 @@ troubleshoot_init () {
 #Perform Tests after stack creation
 tests () {
 
+    tmp=$RANDOM
 
+    api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
 
+    api_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayID") | .OutputValue')
+
+    this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body $tmp)
+
+    print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!")" "info"
+    print_style "Test 2 Results: $(echo $this_response | grep "$tmp")" "info"
 
 
     
