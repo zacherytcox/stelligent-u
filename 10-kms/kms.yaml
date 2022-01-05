@@ -1,0 +1,356 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  UbuntuAMI:
+    Type: String
+    Default: '/aws/service/canonical/ubuntu/server/20.04/stable/current/amd64/hvm/ebs-gp2/ami-id'
+  VPCID:
+    Type: String
+  SubnetID:
+    Type: String
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  Key1:
+    Type: AWS::KMS::Key
+    Properties: 
+      Description: Key for Lab 10
+      KeyPolicy: {
+            "Id": "key-consolepolicy-3",
+            "Version": "2012-10-17",
+            "Statement": [
+                {
+                    "Sid": "Enable IAM User Permissions",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::324320755747:root"
+                    },
+                    "Action": "kms:*",
+                    "Resource": "*"
+                },
+                {
+                    "Sid": "Allow access for Key Administrators",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::324320755747:user/zachery.cox.labs"
+                    },
+                    "Action": [
+                        "kms:Create*",
+                        "kms:Describe*",
+                        "kms:Enable*",
+                        "kms:List*",
+                        "kms:Put*",
+                        "kms:Update*",
+                        "kms:Revoke*",
+                        "kms:Disable*",
+                        "kms:Get*",
+                        "kms:Delete*",
+                        "kms:TagResource",
+                        "kms:UntagResource",
+                        "kms:ScheduleKeyDeletion",
+                        "kms:CancelKeyDeletion"
+                    ],
+                    "Resource": "*"
+                },
+                {
+                    "Sid": "Allow use of the key",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::324320755747:user/zachery.cox.labs"
+                    },
+                    "Action": [
+                        "kms:Encrypt",
+                        "kms:Decrypt",
+                        "kms:ReEncrypt*",
+                        "kms:GenerateDataKey*",
+                        "kms:DescribeKey"
+                    ],
+                    "Resource": "*"
+                },
+                {
+                    "Sid": "Allow attachment of persistent resources",
+                    "Effect": "Allow",
+                    "Principal": {
+                        "AWS": "arn:aws:iam::324320755747:user/zachery.cox.labs"
+                    },
+                    "Action": [
+                        "kms:CreateGrant",
+                        "kms:ListGrants",
+                        "kms:RevokeGrant"
+                    ],
+                    "Resource": "*",
+                    "Condition": {
+                        "Bool": {
+                            "kms:GrantIsForAWSResource": "true"
+                        }
+                    }
+                }
+            ]
+        }
+      PendingWindowInDays: 7
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  # Alias1:
+  #   Type: AWS::KMS::Alias
+  #   Properties: 
+  #     AliasName: SnazzyName
+  #     TargetKeyId: !Ref Key1
+#   IAMRole:
+#     Type: AWS::IAM::Role
+#     Properties: 
+#       AssumeRolePolicyDocument: 
+#         Version: '2012-10-17'
+#         Statement:
+#         - Sid: ''
+#           Effect: Allow
+#           Principal:
+#             Service: 
+#               - lambda.amazonaws.com
+#           Action: sts:AssumeRole
+#       Description: String
+#       Policies: 
+#         - PolicyDocument: 
+#             Version: '2012-10-17'
+#             Statement:
+#             - Sid: AWSCloudTrailCreateLogStream20141101
+#               Effect: Allow
+#               Action:
+#               - lambda:*
+#               Resource:
+#               - '*'
+#             - Sid: AWSCloudTrailPutLogEvents20141101
+#               Effect: Allow
+#               Action:
+#               - logs:*
+#               - dynamodb:*
+#               Resource:
+#               - '*'
+#           PolicyName: Policy
+#       Tags: 
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+#   Lambda:
+#     Type: AWS::Lambda::Function
+#     Properties: 
+#       Code: 
+#         ZipFile: |
+#           import json
+#           import boto3
+#           client = boto3.client('dynamodb')
+#           print('Loading function')
+#           def lambda_handler(event, context):
+#               print(event)
+#               this_table = None
+#               tables = client.list_tables()
+#               # print(tables['TableNames'])
+#               for table in tables['TableNames']:
+#                 if table.startswith("lab9-zach-DynaDB"):
+#                   print(table)
+#                   this_table = table
+
+#               response = client.put_item(
+#                   TableName=this_table,
+#                   Item={"Data":{"S":str(event)}}
+#               )
+                  
+
+
+#               return {
+#                 'body': 'WORKS!!! ' + str(event),
+#                 'headers': {
+#                   'Content-Type': 'application/json'
+#                 },
+#                 'statusCode': 200
+#               } 
+#       Role: !GetAtt IAMRole.Arn
+#       Runtime: python3.7
+#       Handler: index.lambda_handler
+#       Tags: 
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+#   LambdaPermission:
+#     Type: AWS::Lambda::Permission
+#     Properties:
+#       Action: lambda:InvokeFunction
+#       FunctionName: !GetAtt Lambda.Arn
+#       Principal: apigateway.amazonaws.com
+#       SourceArn: !Sub arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${RESTAPI}/*/POST/
+#   LambdaPermission2:
+#     Type: AWS::Lambda::Permission
+#     Properties:
+#       Action: lambda:InvokeFunction
+#       FunctionName: !GetAtt Lambda.Arn
+#       Principal: events.amazonaws.com
+#       SourceArn: !Sub arn:aws:events:${AWS::Region}:${AWS::AccountId}:rule/*
+#   METHOD:
+#     Type: AWS::ApiGateway::Method
+#     Properties: 
+#       AuthorizationType: NONE
+#       Integration:
+#         IntegrationResponses: 
+#           - StatusCode: 200
+#         IntegrationHttpMethod: POST
+#         Type: AWS
+#         Uri: !Sub
+#           - arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${lambdaArn}/invocations
+#           - lambdaArn: !GetAtt Lambda.Arn
+#       MethodResponses:
+#         -  StatusCode: 200
+#       HttpMethod: POST
+#       ResourceId: !GetAtt RESTAPI.RootResourceId
+#       RestApiId: !Ref RESTAPI
+#   RESTAPI:
+#     Type: AWS::ApiGateway::RestApi
+#     Properties: 
+#       Name: !Ref TagUser
+#       Tags: 
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+#   DEPLOYMENT:
+#     Type: AWS::ApiGateway::Deployment
+#     Properties: 
+#       RestApiId: !Ref RESTAPI
+#     DependsOn:
+#       - METHOD
+#   DynaDB:
+#     Type: AWS::DynamoDB::Table
+#     Properties: 
+#       KeySchema:
+#         - AttributeName: Data
+#           KeyType: HASH
+#       AttributeDefinitions: 
+#         - AttributeName: "Data"
+#           AttributeType: "S"
+#       ProvisionedThroughput:
+#           ReadCapacityUnits: 5
+#           WriteCapacityUnits: 5
+#       Tags:  
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+#   Event:
+#     Type: AWS::Events::Rule
+#     Properties: 
+#       Name: !Ref TagUser
+#       State: ENABLED
+#       EventPattern: {
+#           "source": ["aws.s3"],
+#           "detail-type": ["AWS API Call via CloudTrail"],
+#           "detail": {
+#             "eventSource": ["s3.amazonaws.com"],
+#             "eventName": ["PutObject"]
+#           }
+#         }
+      
+#       # {
+#       #     "account": ["324320755747"]
+#       #   }
+#       Targets: 
+#         - Arn: !GetAtt Lambda.Arn
+#           Id: !Ref TagUser
+#   Bucket:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       Tags: 
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+#   BucketPolicy:
+#     Type: AWS::S3::BucketPolicy
+#     Properties: 
+#       Bucket: !Ref Bucket
+#       PolicyDocument: 
+#         Version: '2012-10-17'
+#         Statement:
+#         - Sid: AWSCloudTrailAclCheck20150319
+#           Effect: Allow
+#           Principal:
+#             Service: cloudtrail.amazonaws.com
+#           Action: s3:GetBucketAcl
+#           Resource: 
+#             !Join
+#               - ''
+#               - - 'arn:aws:s3:::'
+#                 - !Ref Bucket
+#         - Sid: AWSCloudTrailWrite20150319
+#           Effect: Allow
+#           Principal:
+#             Service: cloudtrail.amazonaws.com
+#           Action: s3:PutObject
+#           Resource:
+#             !Join
+#               - ''
+#               - - 'arn:aws:s3:::'
+#                 - !Ref Bucket
+#                 - '/AWSLogs/'
+#                 - !Ref AWS::AccountId
+#                 - '/*'
+#           Condition:
+#             StringLike:
+#               s3:x-amz-acl: bucket-owner-full-control
+#               aws:SourceArn: 
+#                 !Join
+#                   - ''
+#                   - - 'arn:aws:cloudtrail:'
+#                     - !Ref AWS::Region
+#                     - ':'
+#                     - !Ref AWS::AccountId
+#                     - ':trail/*'
+#   CloudTrail:
+#     Type: AWS::CloudTrail::Trail
+#     DependsOn:
+#       - Bucket
+#       - BucketPolicy
+#     Properties: 
+#       EventSelectors: 
+#         - DataResources: 
+#           - Type: AWS::S3::Object
+#             Values: 
+#               - "arn:aws:s3:::"
+#       IsLogging: True
+#       S3BucketName: !Ref Bucket
+#       Tags: 
+#         - Key: user
+#           Value: !Ref TagUser
+#         - Key: stelligent-u-lesson
+#           Value: !Ref TagLesson
+#         - Key: stelligent-u-lab
+#           Value: !Ref TagLab
+# Outputs:
+#   APIGatewayResourceId:
+#     Description: Data
+#     Value: !GetAtt RESTAPI.RootResourceId
+#   APIGatewayID:
+#     Description: Data
+#     Value: !Ref RESTAPI
+   
