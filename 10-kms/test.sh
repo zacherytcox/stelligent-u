@@ -358,6 +358,13 @@ troubleshoot_init () {
 tests () {
 
 
+    # this_alias=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::KMS::Alias") | .PhysicalResourceId')
+    # this_key_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::KMS::Key") | .PhysicalResourceId')
+    # echo $this_alias
+    # echo $this_key_id
+
+    # aws --profile $PROFILE --region $REGION kms encrypt --key-id $this_alias --plaintext fileb://./secret.txt --output text --query CiphertextBlob | base64 --decode > ExampleEncryptedFile
+
     # 9.1.3
     # this_stack=zachstackname$RANDOM
     # this_bucket=zachs3buckettesting$RANDOM

@@ -102,11 +102,11 @@ Resources:
           Value: !Ref TagLesson
         - Key: stelligent-u-lab
           Value: !Ref TagLab
-  # Alias1:
-  #   Type: AWS::KMS::Alias
-  #   Properties: 
-  #     AliasName: SnazzyName
-  #     TargetKeyId: !Ref Key1
+  Alias1:
+    Type: AWS::KMS::Alias
+    Properties: 
+      AliasName: alias/SnazzyName
+      TargetKeyId: !Ref Key1
 #   IAMRole:
 #     Type: AWS::IAM::Role
 #     Properties: 
