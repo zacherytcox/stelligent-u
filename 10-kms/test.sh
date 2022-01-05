@@ -360,10 +360,18 @@ tests () {
 
     this_alias=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::KMS::Alias") | .PhysicalResourceId')
     this_key_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::KMS::Key") | .PhysicalResourceId')
-    echo $this_alias
-    echo $this_key_id
+    # echo $this_alias
+    # echo $this_key_id
 
     aws --profile $PROFILE --region $REGION kms encrypt --key-id $this_alias --plaintext fileb://./secret.txt --output text --query CiphertextBlob | base64 --decode > ExampleEncryptedFile
+
+    aws --profile $PROFILE --region $REGION kms decrypt --ciphertext-blob fileb://./ExampleEncryptedFile --key-id $this_alias --output text --query Plaintext | base64 --decode > ExamplePlaintextFile.txt
+    cat ./ExamplePlaintextFile.txt
+    echo "\n\n"
+
+    rm ./ExamplePlaintextFile.txt ./ExampleEncryptedFile
+
+
 
     # 9.1.3
     # this_stack=zachstackname$RANDOM
