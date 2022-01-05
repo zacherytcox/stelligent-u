@@ -396,6 +396,8 @@ tests () {
 
     #9.1.2
     tmp=$RANDOM
+    this_bucket=zachs3buckettesting$RANDOM
+    aws --profile $PROFILE --region $REGION s3api create-bucket --bucket $this_bucket
 
     api_resource_id=$(aws --profile $PROFILE --region $REGION cloudformation describe-stacks --stack $STACKNAME  | jq -r '.Stacks | .[] | .Outputs | .[] | select(.OutputKey=="APIGatewayResourceId") | .OutputValue')
 
@@ -405,17 +407,25 @@ tests () {
 
     print_style "Items in Table: $(aws --profile $PROFILE --region $REGION dynamodb scan --table-name $this_table)" "warning"
 
-    this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body "{\"Artist\":{\"S\":\"ThisTest$RANDOM\"},\"NumberOfSongs\":{\"N\":\"$tmp\"}}")
+    this_response=$(aws --profile $PROFILE --region $REGION apigateway test-invoke-method --rest-api-id $api_id --resource-id $api_resource_id --http-method POST --path-with-query-string '/' --body '{"Artist":{"S":"Testauto2"},"NumberOfSongs":{"N":"267"}}')
 
-    print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!")" "info"
-    print_style "Test 2 Results: $(echo $this_response | grep "$tmp")" "info"
-    print_style "Test 2 Results: $(echo $this_response | grep "ThisTest")" "info"
+    print_style "Test 1 Results: $(echo $this_response | grep "WORKS!!!") \n\n" "info"
+    print_style "Test 2 Results: $(echo $this_response | grep "Testauto2") \n\n" "info"
+    print_style "Test 3 Results: $(echo $this_response | grep "ThisTest") \n\n" "info"
 
 
     print_style "Items in Table: $(aws --profile $PROFILE --region $REGION dynamodb scan --table-name $this_table)" "warning"
 
-
+    while true; do
+        read -r -p "Enter 1 to finish test, Enter to run tests: " answer
+        case $answer in
+            [1]* ) break ;;
+            "" ) aws --profile $PROFILE --region $REGION s3api put-object --bucket $this_bucket --key $RANDOM.txt --body ./params.json; sleep 5; print_style "Items in Table: $(aws --profile $PROFILE --region $REGION dynamodb scan --table-name $this_table)" "warning"  ;;
+            * ) print_style  "Please answer 1 or Enter" "danger";;
+        esac
+    done
     
+    aws --profile $PROFILE --region $REGION s3 rb --force s3://$this_bucket/
 
 
     # print_style  "Waiting 30 seconds..." "warning"
@@ -503,6 +513,21 @@ tests () {
 
 #Script Start
 package_check
+
+#Function to just run tests
+if [[ "$1" == 't' ]]
+    then
+        while true; do
+            tests
+            read -r -p "Enter 1 to delete the stack, 2 to test again, Enter to exit: [To make changes, please exit and run tests again without 't' flag!]" answer
+            case $answer in
+                [1]* ) init_delete; delete_stack; exit 1;;
+                [2]* ) : ;;
+                "" ) exit 1;;
+                * ) print_style  "Please answer 1, 2, or Enter" "danger";;
+            esac
+        done
+fi
 
 #Function to delete all stacks
 if [[ "$1" == 'delete' ]]
