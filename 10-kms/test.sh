@@ -365,12 +365,25 @@ tests () {
 
     aws --profile $PROFILE --region $REGION kms encrypt --key-id $this_alias --plaintext fileb://./secret.txt --output text --query CiphertextBlob | base64 --decode > ExampleEncryptedFile
 
+    print_style "$(cat ./ExampleEncryptedFile)" "danger"
+
     aws --profile $PROFILE --region $REGION kms decrypt --ciphertext-blob fileb://./ExampleEncryptedFile --key-id $this_alias --output text --query Plaintext | base64 --decode > ExamplePlaintextFile.txt
     cat ./ExamplePlaintextFile.txt
     echo "\n\n"
 
     rm ./ExamplePlaintextFile.txt ./ExampleEncryptedFile
 
+    this_bucket=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::S3::Bucket") | .PhysicalResourceId')
+
+
+    print_style "Ruby:\n" "warning"
+    ruby ./kms.rb "$this_alias" "$this_bucket"
+
+    cat ./test-final.txt
+
+    read -r -p "Enter to continue... " answer
+
+    rm ./test-*.txt
 
 
     # 9.1.3
@@ -534,11 +547,11 @@ if [[ "$1" == 't' ]]
     then
         while true; do
             tests
-            read -r -p "Enter 1 to delete the stack, 2 to test again, Enter to exit: [To make changes, please exit and run tests again without 't' flag!]" answer
+            read -r -p "Enter 1 to delete the stack, 2 to exit, Enter to test again: [To make changes, please exit and run tests again without 't' flag!]" answer
             case $answer in
                 [1]* ) init_delete; delete_stack; exit 1;;
-                [2]* ) : ;;
-                "" ) exit 1;;
+                [2]* ) exit 1 ;;
+                "" ) : ;;
                 * ) print_style  "Please answer 1, 2, or Enter" "danger";;
             esac
         done

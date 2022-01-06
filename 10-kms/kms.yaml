@@ -275,16 +275,16 @@ Resources:
 #       Targets: 
 #         - Arn: !GetAtt Lambda.Arn
 #           Id: !Ref TagUser
-#   Bucket:
-#     Type: AWS::S3::Bucket
-#     Properties:
-#       Tags: 
-#         - Key: user
-#           Value: !Ref TagUser
-#         - Key: stelligent-u-lesson
-#           Value: !Ref TagLesson
-#         - Key: stelligent-u-lab
-#           Value: !Ref TagLab
+  Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
 #   BucketPolicy:
 #     Type: AWS::S3::BucketPolicy
 #     Properties: 
