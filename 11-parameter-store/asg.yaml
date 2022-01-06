@@ -8,9 +8,9 @@ Parameters:
     Type: String
   KeyName:
     Type: String
-  HighLevel:
+  Check:
     Type: 'AWS::SSM::Parameter::Name'
-    Default: '/zachery.cox.labs/stelligent-u/lab11'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/name'
   Name:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Default: '/zachery.cox.labs/stelligent-u/lab11/name'
@@ -32,6 +32,9 @@ Parameters:
   StartDate:
     Type: 'AWS::SSM::Parameter::Value<String>'
     Default: '/zachery.cox.labs/stelligent-u/lab11/start-date'
+  Middlename:
+    Type: String
+    Default: ${{resolve:ssm-secure:/zachery.cox.labs/stelligent-u/lab11/middlename:1}}
 Resources:
   WebServerAsg:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
@@ -184,9 +187,9 @@ Resources:
       Port: 80
       Protocol: HTTP
 Outputs:
-  HighLevel:
-    Description: Test
-    Value: !Ref HighLevel
+  # HighLevel:
+  #   Description: Test
+  #   Value: !Ref HighLevel
   Name:
     Description: TestName
     Value: !Ref Name

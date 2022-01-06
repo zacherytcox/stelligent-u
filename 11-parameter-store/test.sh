@@ -364,7 +364,9 @@ tests () {
     #Lab 11.1.2
     print_style "$(aws --profile $PROFILE --region $REGION ssm get-parameters-by-path --path /zachery.cox.labs/stelligent-u/lab11)\n" "info" 
 
-    # aws ssm put-parameter --name "/zachery.cox.labs/stelligent-u/lab11/middlename" --value "Papa" --type "SecureString" --tier Advanced --key-id
+    this_alias=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::KMS::Alias") | .PhysicalResourceId')
+
+    aws --profile $PROFILE --region $REGION ssm put-parameter --name "/zachery.cox.labs/stelligent-u/lab11/middlename" --value "Papa" --type "SecureString" --tier Advanced --key-id $this_alias
 
     
     this_YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/11-parameter-store/params2.json"
@@ -424,7 +426,7 @@ tests () {
         esac
     done
 
-    
+    aws --profile $PROFILE --region $REGION ssm delete-parameter --name "/zachery.cox.labs/stelligent-u/lab11/middlename"
 
 
 
