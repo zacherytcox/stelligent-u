@@ -123,7 +123,11 @@ init () {
 
     print_style  "Key Pair Creation..." "background"
 
-
+    # Temp
+    print_style  "Creating Key Pair..." "background"
+    chmod 744 ./zacherycox.pem
+    aws --profile $PROFILE --region $REGION ec2 create-key-pair --key-name zacherycox | jq -r '.KeyMaterial' > zacherycox.pem
+    chmod 400 zacherycox.pem
     
     this_file="${YAMLLOCATION:7}"
     ec2=$(cat $this_file | grep -i "AWS::EC2::Instance")
@@ -226,12 +230,12 @@ update_stack () {
     if [[ "$?" != '0' ]]
         then
             get_stack_issue $1
-            status=$(aws --profile $profile --region $REGION cloudformation describe-stacks --stack $STACKNAME | jq -r '.Stacks | .[].StackStatus')
+            status=$(aws --profile $profile --region $REGION cloudformation describe-stacks --stack $1 | jq -r '.Stacks | .[].StackStatus')
 
             while true; do
                 read -r -p "[$status] Issues exist. Enter 1 to delete the stack, 2 to try updating, 3 to exit, Enter to continue: " answer
                 case $answer in
-                    [1]* ) delete_stack $stackid; exit 1; break;;
+                    [1]* ) delete_stack "$1"; exit 1; break;;
                     [2]* ) update_stack "$1" "$2" "$3" $profile; break;;
                     [3]* ) exit 1;;
                     "" ) print_style  "Continue..." "background"; break;;
@@ -265,7 +269,7 @@ create_stack () {
             if [[ "$?" != '0' ]]
                 then
                     get_stack_issue $1
-                    status=$(aws --profile $profile --region $REGION cloudformation describe-stacks --stack $STACKNAME | jq -r '.Stacks | .[].StackStatus')
+                    status=$(aws --profile $profile --region $REGION cloudformation describe-stacks --stack $1 | jq -r '.Stacks | .[].StackStatus')
 
                     if [[ "$status" == 'ROLLBACK_COMPLETE' ]]
                         then
@@ -357,8 +361,71 @@ troubleshoot_init () {
 #Perform Tests after stack creation
 tests () {
 
-
+    #Lab 11.1.2
     print_style "$(aws --profile $PROFILE --region $REGION ssm get-parameters-by-path --path /zachery.cox.labs/stelligent-u/lab11)\n" "info" 
+
+    # aws ssm put-parameter --name "/zachery.cox.labs/stelligent-u/lab11/middlename" --value "Papa" --type "SecureString" --tier Advanced --key-id
+
+    
+    this_YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/11-parameter-store/params2.json"
+    this_YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/11-parameter-store/asg.yaml"
+
+    create_stack "$STACKNAME-2" "$this_YAMLLOCATION" "$this_YAMLPARAMSLOCATION"
+
+    #Lab 7 Tests
+
+    this_asg_name=$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups | jq -r '.AutoScalingGroups | .[] | select(.LaunchConfigurationName=="SimpleWebServerLC-zach") | .AutoScalingGroupName')
+    # aws --profile $PROFILE --region $REGION autoscaling start-instance-refresh --auto-scaling-group-name $this_asg_name --preferences '{"InstanceWarmup": 0, "MinHealthyPercentage": 0}'
+    sleep 15
+    this_instance_id=$(aws --profile $PROFILE --region $REGION autoscaling describe-auto-scaling-groups | jq -r '[.AutoScalingGroups | .[] | select(.LaunchConfigurationName=="SimpleWebServerLC-zach") | .Instances | .[] | select((.LifecycleState=="Pending") or .LifecycleState=="InService") | .InstanceId][0]')
+
+    this_instance_pub_ip=$(aws --profile $PROFILE --region $REGION ec2 describe-instances --instance-ids $this_instance_id | jq -r '.Reservations | .[] | .Instances | .[].PublicIpAddress')
+
+    print_style  "Waiting 60 seconds for Nginx to launch. May take longer..." "warning"
+    sleep 60
+
+    while true; do
+        this_response=$(curl $this_instance_pub_ip)
+        this_status=$(ssh -i zacherycox.pem ec2-user@$this_instance_pub_ip 'systemctl status nginx | grep -i "Active: active (running)"')
+        echo $this_response $this_status
+        if [[ "$this_response" != '<p>Automation for the People</p>' ]]
+            then
+                print_style  "Waiting for NGINX to launch...\n $this_status" "background"
+                sleep 3
+            else
+                print_style "NGINX is up!" "success"
+                break
+        fi
+        read -r -p "Enter 1 to finish, 2 to troubleshoot init, 3 to exit, Enter to try call again: " answer
+        case $answer in
+            [1]* ) break;;
+            [2]* ) troubleshoot_init $this_instance_pub_ip; break;;
+            [3]* ) exit 1; break;;
+            "" ) : ;;
+            * ) print_style  "Please answer 1, 2, 3, or Enter" "danger";;
+        esac
+    done
+
+    this_elb=$(aws --profile labs-mfa --region us-east-1 cloudformation describe-stack-resources --stack "$STACKNAME-2" | jq -r '.StackResources' | jq -r '.[] | select(.LogicalResourceId=="ALB") | .PhysicalResourceId')
+
+    elb_dns=$(aws --profile labs-mfa --region us-east-1 elbv2 describe-load-balancers --load-balancer-arns "$this_elb" | jq -r '.LoadBalancers | .[] | .DNSName')
+
+    print_style  "ELB Curl:" "info"
+    curl $elb_dns
+
+
+    while true; do
+        read -r -p "Enter 1 to delete stack,  3 to exit, Enter to continue: " answer
+        case $answer in
+            [1]* ) delete_stack "$STACKNAME-2"; break;;
+            [3]* ) exit 1; break;;
+            "" ) break;;
+            * ) print_style  "Please answer 1, 3, or Enter" "danger";;
+        esac
+    done
+
+    
+
 
 
     #Lab 10

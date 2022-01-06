@@ -198,15 +198,15 @@ Resources:
   #           ]
   #       }
   #     PendingWindowInDays: 7
-      # Tags: 
-      #   - Key: user
-      #     Value: !Ref TagUser
-      #   - Key: Name
-      #     Value: !Ref TagUser
-      #   - Key: stelligent-u-lesson
-      #     Value: !Ref TagLesson
-      #   - Key: stelligent-u-lab
-      #     Value: !Ref TagLab
+  #     Tags: 
+  #       - Key: user
+  #         Value: !Ref TagUser
+  #       - Key: Name
+  #         Value: !Ref TagUser
+  #       - Key: stelligent-u-lesson
+  #         Value: !Ref TagLesson
+  #       - Key: stelligent-u-lab
+  #         Value: !Ref TagLab
   # Alias1:
   #   Type: AWS::KMS::Alias
   #   Properties: 

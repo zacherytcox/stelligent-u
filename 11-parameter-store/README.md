@@ -120,6 +120,7 @@ entire subtree with a single query.
 
 _When you look at your stack in the CloudFormation console, can you find
 the values of your parameter resources there?_
+>Under the `Parameters` tab, you can see the values set for the parameters.
 
 #### Lab 11.1.3: Integration with CloudFormation
 

@@ -14,14 +14,6 @@
     {
         "ParameterKey": "KeyName",
         "ParameterValue": "zacherycox"
-    },
-    {
-        "ParameterKey": "VPCID",
-        "ParameterValue": "vpc-0a7bd3f082973f0e0"
-    },
-    {
-        "ParameterKey": "SubnetID",
-        "ParameterValue": "subnet-0aaa8295d2fa1e3e4"
     }
     
 ]
