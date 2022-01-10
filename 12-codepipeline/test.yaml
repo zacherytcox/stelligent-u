@@ -40,6 +40,18 @@ Resources:
                 BranchName: 'Lab-12'
               OutputArtifacts: 
                 - Name: SourceOutput
+        - Name: Build
+          Actions: 
+            - Name: Build
+              ActionTypeId: 
+                Category: Build
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts: 
+                - Name: SourceOutput
+              Configuration:
+                ProjectName: "zachtestbuild"
         - Name: Deploy
           Actions: 
             - Name: Deploy
@@ -57,6 +69,20 @@ Resources:
                   {"BucketNameParameter": "zachtestcodepipelines3bucket"}
               InputArtifacts: 
                 - Name: SourceOutput
+        # - Name: Test
+        #   Actions: 
+        #     - Name: Test
+        #       ActionTypeId: 
+        #         Category: Test
+        #         Owner: AWS
+        #         Provider: CodeBuild
+        #         Version: 1
+              # Configuration:
+              #   ConnectionArn: !Ref CodeStarConnection
+              #   FullRepositoryId: zacherytcox/stelligent-u
+              #   BranchName: 'Lab-12'
+              # OutputArtifacts: 
+              #   - Name: SourceOutput
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -87,6 +113,7 @@ Resources:
           Principal:
             Service: 
               - codepipeline.amazonaws.com
+              - codebuild.amazonaws.com
               - cloudformation.amazonaws.com
           Action: sts:AssumeRole
       Description: String
@@ -101,6 +128,25 @@ Resources:
               Resource:
               - '*'
           PolicyName: Policy
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  CodeBuild:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: CODEPIPELINE
+      Environment: 
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: al2/standard/3.0
+        Type: LINUX_CONTAINER
+      ServiceRole: !GetAtt IAMRole.Arn
+      Source: 
+        Type: CODEPIPELINE
       Tags: 
         - Key: user
           Value: !Ref TagUser

@@ -178,6 +178,8 @@ init_delete () {
             aws --profile $PROFILE --region $REGION s3 rb --force s3://$i/
         done
 
+    
+
 }
 
 #Delete CloudFormation Stack
@@ -650,7 +652,7 @@ while true; do
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, Enter to exit: " answer
     case $answer in
-        [1]* ) init_delete; delete_stack; exit 1;;
+        [1]* ) init_delete; delete_stack 'zachtestcodepipeline'; delete_stack; exit 1;;
         [2]* ) : ;;
         "" ) exit 1;;
         * ) print_style  "Please answer 1, 2, or Enter" "danger";;
