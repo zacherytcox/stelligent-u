@@ -2,7 +2,7 @@
 
 
 #Set parameters
-YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/test.yaml"
+YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/dynamo.yaml"
 YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/params.json"
 STACKNAME="lab12-zach"
 REGION="us-east-1"
@@ -365,9 +365,11 @@ troubleshoot_init () {
 #Perform Tests after stack creation
 tests () {
 
-    this_pipeline=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::CodePipeline::Pipeline") | .PhysicalResourceId')
 
-    aws --profile $PROFILE --region $REGION codepipeline start-pipeline-execution --name $this_pipeline
+    # Lab 12.1.2
+    # this_pipeline=$(aws --profile $PROFILE --region $REGION cloudformation describe-stack-resources --stack $STACKNAME | jq -r '.StackResources' | jq -r '.[] | select(.ResourceType=="AWS::CodePipeline::Pipeline") | .PhysicalResourceId')
+
+    # aws --profile $PROFILE --region $REGION codepipeline start-pipeline-execution --name $this_pipeline
 
     # #Lab 11.1.2
     # print_style "$(aws --profile $PROFILE --region $REGION ssm get-parameters-by-path --path /zachery.cox.labs/stelligent-u/lab11)\n" "info" 
@@ -641,7 +643,7 @@ fi
 #Function to delete all stacks
 if [[ "$1" == 'delete' ]]
     then
-        init_delete; delete_stack 'zachtestcodepipeline'; delete_stack; exit 1
+        init_delete; delete_stack; exit 1
 fi
 
 #Function to add the assume_role to logic
@@ -658,7 +660,7 @@ while true; do
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, Enter to exit: " answer
     case $answer in
-        [1]* ) init_delete; delete_stack 'zachtestcodepipeline'; delete_stack; exit 1;;
+        [1]* ) init_delete; delete_stack; exit 1;;
         [2]* ) : ;;
         "" ) exit 1;;
         * ) print_style  "Please answer 1, 2, or Enter" "danger";;

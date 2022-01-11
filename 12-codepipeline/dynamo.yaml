@@ -1,0 +1,64 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Parameters:
+  VPCID:
+    Type: String
+  SubnetID:
+    Type: String
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+  AppStackName:
+    Type: String
+  AppS3BucketName:
+    Type: String
+  Branch:
+    Type: String
+  RepoID:
+    Type: String
+Resources:
+  DynaDB:
+    Type: AWS::DynamoDB::Table
+    Properties: 
+      KeySchema:
+        - AttributeName: ID
+          KeyType: HASH
+      AttributeDefinitions: 
+        - AttributeName: "ID"
+          AttributeType: "S"
+      ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Sid: ''
+          Effect: Allow
+          Principal:
+            Service: 
+              - lambda.amazonaws.com
+          Action: sts:AssumeRole
+      Description: String
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonDynamoDBReadOnlyAccess
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
