@@ -12,12 +12,17 @@ Parameters:
     Type: String
   KeyName:
     Type: String
+  AppStackName:
+    Type: String
+  AppS3BucketName:
+    Type: String
+  Branch:
+    Type: String
+  RepoID:
+    Type: String
 Resources:
   Bucket:
     Type: AWS::S3::Bucket
-    Properties:
-      BucketName: !Ref TagUser
-    DeletionPolicy: Delete
   CodePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties: 
@@ -36,8 +41,8 @@ Resources:
                 Version: 1
               Configuration:
                 ConnectionArn: !Ref CodeStarConnection
-                FullRepositoryId: zacherytcox/stelligent-u
-                BranchName: 'Lab-12'
+                FullRepositoryId: !Ref RepoID
+                BranchName: !Ref Branch
               OutputArtifacts: 
                 - Name: SourceOutput
         - Name: Build
@@ -51,7 +56,7 @@ Resources:
               InputArtifacts: 
                 - Name: SourceOutput
               Configuration:
-                ProjectName: "zachtestbuild"
+                ProjectName: !Ref CodeBuild
         - Name: Deploy
           Actions: 
             - Name: Deploy
@@ -62,27 +67,26 @@ Resources:
                 Version: 1
               Configuration: 
                 ActionMode: "CREATE_UPDATE"
-                StackName: "zachtestcodepipeline"
+                StackName: !Ref AppStackName
                 RoleArn: !GetAtt IAMRole.Arn
                 TemplatePath: SourceOutput::12-codepipeline/bucket.yaml
-                ParameterOverrides: | 
-                  {"BucketNameParameter": "zachtestcodepipelines3bucket"}
+                ParameterOverrides: 
+                  !Sub | 
+                    {"BucketNameParameter": "${AppS3BucketName}"}
               InputArtifacts: 
                 - Name: SourceOutput
-        # - Name: Test
-        #   Actions: 
-        #     - Name: Test
-        #       ActionTypeId: 
-        #         Category: Test
-        #         Owner: AWS
-        #         Provider: CodeBuild
-        #         Version: 1
-              # Configuration:
-              #   ConnectionArn: !Ref CodeStarConnection
-              #   FullRepositoryId: zacherytcox/stelligent-u
-              #   BranchName: 'Lab-12'
-              # OutputArtifacts: 
-              #   - Name: SourceOutput
+        - Name: Test
+          Actions: 
+            - Name: Test
+              ActionTypeId: 
+                Category: Test
+                Owner: AWS
+                Provider: CodeBuild
+                Version: 1
+              InputArtifacts: 
+                - Name: SourceOutput
+              Configuration:
+                ProjectName: !Ref CodeBuild2
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -142,10 +146,58 @@ Resources:
         Type: CODEPIPELINE
       Environment: 
         ComputeType: BUILD_GENERAL1_SMALL
-        Image: al2/standard/3.0
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
         Type: LINUX_CONTAINER
       ServiceRole: !GetAtt IAMRole.Arn
       Source: 
+        BuildSpec: !Sub |
+          version: 0.2
+
+          phases:
+            build:
+              commands:
+                - echo Build started on `date`
+                - ls -alh
+                - pwd
+                - whoami
+                - aws cloudformation validate-template --template-body file://12-codepipeline/bucket.yaml
+              finally:
+                - echo This always runs even if the install command fails
+        SourceIdentifier: pleaseworkforZach
+        Type: CODEPIPELINE
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  CodeBuild2:
+    Type: AWS::CodeBuild::Project
+    Properties: 
+      Artifacts: 
+        Type: CODEPIPELINE
+      Environment: 
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+        Type: LINUX_CONTAINER
+      ServiceRole: !GetAtt IAMRole.Arn
+      Source: 
+        BuildSpec: !Sub |
+          version: 0.2
+
+          phases:
+            build:
+              commands:
+                - echo Build started on `date`
+                - ls -alh
+                - pwd
+                - whoami
+                - aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus'
+                - if [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'UPDATE_COMPLETE' ] || [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'CREATE_COMPLETE' ] ;then echo Stack Completed Successfully; else exit 1; fi 
+              finally:
+                - echo This always runs even if the install command fails
+        SourceIdentifier: pleaseworkforZach
         Type: CODEPIPELINE
       Tags: 
         - Key: user

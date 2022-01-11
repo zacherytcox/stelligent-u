@@ -9,7 +9,7 @@
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "12.1.1"
+        "ParameterValue": "12.1.2"
     },
     {
         "ParameterKey": "KeyName",
@@ -22,6 +22,22 @@
     {
         "ParameterKey": "SubnetID",
         "ParameterValue": "subnet-0aaa8295d2fa1e3e4"
+    },
+    {
+        "ParameterKey": "AppStackName",
+        "ParameterValue": "zachtestcodepipeline"
+    },
+    {
+        "ParameterKey": "AppS3BucketName",
+        "ParameterValue": "zachtestcodepipelines3bucket"
+    },
+    {
+        "ParameterKey": "Branch",
+        "ParameterValue": "Lab-12"
+    },
+    {
+        "ParameterKey": "RepoID",
+        "ParameterValue": "zacherytcox/stelligent-u"
     }
     
 ]
