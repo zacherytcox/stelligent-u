@@ -2,7 +2,7 @@
 
 
 #Set parameters
-YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/dynamo.yaml"
+YAMLLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/test.yaml"
 YAMLPARAMSLOCATION="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/12-codepipeline/params.json"
 STACKNAME="lab12-zach"
 REGION="us-east-1"

@@ -66,13 +66,17 @@ Resources:
                 Provider: CloudFormation
                 Version: 1
               Configuration: 
-                ActionMode: "CREATE_UPDATE"
+                ActionMode: "CHANGE_SET_EXECUTE"
                 StackName: !Ref AppStackName
                 RoleArn: !GetAtt IAMRole.Arn
-                TemplatePath: SourceOutput::12-codepipeline/bucket.yaml
+                Capabilities:
+                  CAPABILITY_IAM
+                ChangeSetName:
+                  !Ref AppStackName
+                TemplatePath: SourceOutput::12-codepipeline/dynamo.yaml
                 ParameterOverrides: 
                   !Sub | 
-                    {"BucketNameParameter": "${AppS3BucketName}"}
+                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}" }
               InputArtifacts: 
                 - Name: SourceOutput
         - Name: Test
