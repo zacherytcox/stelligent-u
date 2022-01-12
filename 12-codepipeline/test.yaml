@@ -45,21 +45,41 @@ Resources:
                 BranchName: !Ref Branch
               OutputArtifacts: 
                 - Name: SourceOutput
-        - Name: Build
-          Actions: 
-            - Name: Build
-              ActionTypeId: 
-                Category: Build
-                Owner: AWS
-                Provider: CodeBuild
-                Version: 1
-              InputArtifacts: 
-                - Name: SourceOutput
-              Configuration:
-                ProjectName: !Ref CodeBuild
+        # - Name: Build
+        #   Actions: 
+        #     - Name: Build
+        #       ActionTypeId: 
+        #         Category: Build
+        #         Owner: AWS
+        #         Provider: CodeBuild
+        #         Version: 1
+        #       InputArtifacts: 
+        #         - Name: SourceOutput
+        #       Configuration:
+        #         ProjectName: !Ref CodeBuild
         - Name: Deploy
           Actions: 
-            - Name: Deploy
+            - Name: Deploy1
+              ActionTypeId: 
+                Category: Deploy
+                Owner: AWS
+                Provider: CloudFormation
+                Version: 1
+              Configuration: 
+                ActionMode: "CHANGE_SET_REPLACE"
+                StackName: !Ref AppStackName
+                RoleArn: !GetAtt IAMRole.Arn
+                ChangeSetName: !Ref AppStackName
+                Capabilities:
+                  CAPABILITY_IAM
+                TemplatePath: SourceOutput::12-codepipeline/dynamo.yaml
+                ParameterOverrides: 
+                  !Sub | 
+                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}" }
+              InputArtifacts: 
+                - Name: SourceOutput
+              RunOrder: 1
+            - Name: Deploy2
               ActionTypeId: 
                 Category: Deploy
                 Owner: AWS
@@ -79,18 +99,19 @@ Resources:
                     {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}" }
               InputArtifacts: 
                 - Name: SourceOutput
-        - Name: Test
-          Actions: 
-            - Name: Test
-              ActionTypeId: 
-                Category: Test
-                Owner: AWS
-                Provider: CodeBuild
-                Version: 1
-              InputArtifacts: 
-                - Name: SourceOutput
-              Configuration:
-                ProjectName: !Ref CodeBuild2
+              RunOrder: 2
+        # - Name: Test
+        #   Actions: 
+        #     - Name: Test
+        #       ActionTypeId: 
+        #         Category: Test
+        #         Owner: AWS
+        #         Provider: CodeBuild
+        #         Version: 1
+        #       InputArtifacts: 
+        #         - Name: SourceOutput
+        #       Configuration:
+        #         ProjectName: !Ref CodeBuild2
       Tags:  
         - Key: user
           Value: !Ref TagUser
@@ -143,70 +164,70 @@ Resources:
           Value: !Ref TagLesson
         - Key: stelligent-u-lab
           Value: !Ref TagLab
-  CodeBuild:
-    Type: AWS::CodeBuild::Project
-    Properties: 
-      Artifacts: 
-        Type: CODEPIPELINE
-      Environment: 
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-        Type: LINUX_CONTAINER
-      ServiceRole: !GetAtt IAMRole.Arn
-      Source: 
-        BuildSpec: !Sub |
-          version: 0.2
+  # CodeBuild:
+  #   Type: AWS::CodeBuild::Project
+  #   Properties: 
+  #     Artifacts: 
+  #       Type: CODEPIPELINE
+  #     Environment: 
+  #       ComputeType: BUILD_GENERAL1_SMALL
+  #       Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+  #       Type: LINUX_CONTAINER
+  #     ServiceRole: !GetAtt IAMRole.Arn
+  #     Source: 
+  #       BuildSpec: !Sub |
+  #         version: 0.2
 
-          phases:
-            build:
-              commands:
-                - echo Build started on `date`
-                - ls -alh
-                - pwd
-                - whoami
-                - aws cloudformation validate-template --template-body file://12-codepipeline/bucket.yaml
-              finally:
-                - echo This always runs even if the install command fails
-        SourceIdentifier: pleaseworkforZach
-        Type: CODEPIPELINE
-      Tags: 
-        - Key: user
-          Value: !Ref TagUser
-        - Key: stelligent-u-lesson
-          Value: !Ref TagLesson
-        - Key: stelligent-u-lab
-          Value: !Ref TagLab
-  CodeBuild2:
-    Type: AWS::CodeBuild::Project
-    Properties: 
-      Artifacts: 
-        Type: CODEPIPELINE
-      Environment: 
-        ComputeType: BUILD_GENERAL1_SMALL
-        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
-        Type: LINUX_CONTAINER
-      ServiceRole: !GetAtt IAMRole.Arn
-      Source: 
-        BuildSpec: !Sub |
-          version: 0.2
+  #         phases:
+  #           build:
+  #             commands:
+  #               - echo Build started on `date`
+  #               - ls -alh
+  #               - pwd
+  #               - whoami
+  #               - aws cloudformation validate-template --template-body file://12-codepipeline/dynamo.yaml
+  #             finally:
+  #               - echo This always runs even if the install command fails
+  #       SourceIdentifier: pleaseworkforZach
+  #       Type: CODEPIPELINE
+  #     Tags: 
+  #       - Key: user
+  #         Value: !Ref TagUser
+  #       - Key: stelligent-u-lesson
+  #         Value: !Ref TagLesson
+  #       - Key: stelligent-u-lab
+  #         Value: !Ref TagLab
+  # CodeBuild2:
+  #   Type: AWS::CodeBuild::Project
+  #   Properties: 
+  #     Artifacts: 
+  #       Type: CODEPIPELINE
+  #     Environment: 
+  #       ComputeType: BUILD_GENERAL1_SMALL
+  #       Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
+  #       Type: LINUX_CONTAINER
+  #     ServiceRole: !GetAtt IAMRole.Arn
+  #     Source: 
+  #       BuildSpec: !Sub |
+  #         version: 0.2
 
-          phases:
-            build:
-              commands:
-                - echo Build started on `date`
-                - ls -alh
-                - pwd
-                - whoami
-                - aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus'
-                - if [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'UPDATE_COMPLETE' ] || [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'CREATE_COMPLETE' ] ;then echo Stack Completed Successfully; else exit 1; fi 
-              finally:
-                - echo This always runs even if the install command fails
-        SourceIdentifier: pleaseworkforZach
-        Type: CODEPIPELINE
-      Tags: 
-        - Key: user
-          Value: !Ref TagUser
-        - Key: stelligent-u-lesson
-          Value: !Ref TagLesson
-        - Key: stelligent-u-lab
-          Value: !Ref TagLab
+  #         phases:
+  #           build:
+  #             commands:
+  #               - echo Build started on `date`
+  #               - ls -alh
+  #               - pwd
+  #               - whoami
+  #               - aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus'
+  #               - if [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'UPDATE_COMPLETE' ] || [ "$(aws cloudformation describe-stacks --stack '${AWS::StackName}' | jq -r '.Stacks | .[].StackStatus')" == 'CREATE_COMPLETE' ] ;then echo Stack Completed Successfully; else exit 1; fi 
+  #             finally:
+  #               - echo This always runs even if the install command fails
+  #       SourceIdentifier: pleaseworkforZach
+  #       Type: CODEPIPELINE
+  #     Tags: 
+  #       - Key: user
+  #         Value: !Ref TagUser
+  #       - Key: stelligent-u-lesson
+  #         Value: !Ref TagLesson
+  #       - Key: stelligent-u-lab
+  #         Value: !Ref TagLab
