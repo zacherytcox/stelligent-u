@@ -9,7 +9,7 @@
     },
     {
         "ParameterKey": "TagLab",
-        "ParameterValue": "12.2.2"
+        "ParameterValue": "12.2.3"
     },
     {
         "ParameterKey": "KeyName",
@@ -38,6 +38,10 @@
     {
         "ParameterKey": "RepoID",
         "ParameterValue": "zacherytcox/stelligent-u"
+    },
+    {
+        "ParameterKey": "TableName",
+        "ParameterValue": "zacherytcox"
     }
     
 ]

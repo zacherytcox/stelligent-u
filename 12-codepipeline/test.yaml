@@ -20,6 +20,8 @@ Parameters:
     Type: String
   RepoID:
     Type: String
+  TableName:
+    Type: String
 Resources:
   Bucket:
     Type: AWS::S3::Bucket
@@ -96,7 +98,7 @@ Resources:
                 TemplatePath: SourceOutput::12-codepipeline/dynamo.yaml
                 ParameterOverrides: 
                   !Sub | 
-                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}" }
+                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}","TableName" : "${TableName}${TagLab}" }
               InputArtifacts: 
                 - Name: SourceOutput
               RunOrder: 2

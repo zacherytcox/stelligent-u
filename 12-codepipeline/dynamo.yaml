@@ -6,10 +6,13 @@ Parameters:
     Type: String
   TagLab:
     Type: String
+  TableName:
+    Type: String
 Resources:
   DynaDB:
     Type: AWS::DynamoDB::Table
     Properties: 
+      TableName: !Ref TableName
       KeySchema:
         - AttributeName: ID
           KeyType: HASH
