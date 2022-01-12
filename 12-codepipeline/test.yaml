@@ -77,10 +77,17 @@ Resources:
                 TemplatePath: SourceOutput::12-codepipeline/dynamo.yaml
                 ParameterOverrides: 
                   !Sub | 
-                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}" }
+                    {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}","TableName" : "${TableName}${TagLab}" }
               InputArtifacts: 
                 - Name: SourceOutput
               RunOrder: 1
+            - Name: Approval
+              ActionTypeId: 
+                Category: Approval
+                Owner: AWS
+                Provider: Manual
+                Version: 1
+              RunOrder: 2
             - Name: Deploy2
               ActionTypeId: 
                 Category: Deploy
@@ -101,7 +108,7 @@ Resources:
                     {"TagUser": "${TagUser}", "TagLesson": "${TagLesson}","TagLab" : "${TagLab}","TableName" : "${TableName}${TagLab}" }
               InputArtifacts: 
                 - Name: SourceOutput
-              RunOrder: 2
+              RunOrder: 3
         # - Name: Test
         #   Actions: 
         #     - Name: Test
