@@ -11,7 +11,26 @@ Resources:
   ECR:
     Type: AWS::ECR::Repository
     Properties: 
-      RepositoryName: !Ref TagUser
+      RepositoryName: !Ref TagUser 
+      LifecyclePolicy: 
+        LifecyclePolicyText: !Sub | 
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire images older than 5 days",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 5
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
       Tags:   
         - Key: user
           Value: !Ref TagUser
