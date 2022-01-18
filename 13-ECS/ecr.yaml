@@ -1,0 +1,40 @@
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  ECR:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: !Ref TagUser
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+Outputs:
+  ECR1:
+    Description: ECR Name
+    Value: !Ref ECR
+    Export:
+      Name: !Sub "${AWS::StackName}-Name"
+  ECR2:
+    Description: "ECR Arn"
+    Value: !GetAtt ECR.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-Arn"
+  ECR3:
+    Description: "ECR Uri"
+    Value: !GetAtt ECR.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}-Uri"
+  
