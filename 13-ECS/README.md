@@ -119,6 +119,7 @@ pull images from it. Take a quick glance at [ECR CLI commands](https://docs.aws.
 - Use `ecr get-login` to login to your ECR repository.
 - Try `docker pull`ing the image you exported earlier from your stack. It
   should succeed, can you explain what happened?
+  >I was not authenticated during my initial pull. My second pull, I was authenticated via leveraging the `ecr get-login-password` cli call.
 
 #### Lab 13.1.5 Use `ecr get-authorization-token` to authorize your Docker CLI
 

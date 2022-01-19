@@ -323,7 +323,7 @@ create_stack () {
                         read -r -p "[$status] Issues exist. Enter 1 to delete the stack, 2 to try updating, 3 to exit, Enter to continue: " answer
                         case $answer in
                             [1]* ) delete_stack $1; exit 1; break;;
-                            [2]* ) update_stack "$1" "$2" "$3" $profile; break;;
+                            [2]* ) update_stack "$1" "$2" "$3"; break;;
                             [3]* ) exit 1;;
                             "" ) print_style  "Continue..." "background"; break;;
                             * ) echo "Please answer 1, 2, 3, or Enter";;
@@ -333,7 +333,7 @@ create_stack () {
             fi
         else
             print_style  "Stack $1 already exists! Updating stack..." "info"
-            update_stack "$1" "$2" "$3" $profile
+            update_stack "$1" "$2" "$3"
     fi
 
 }
@@ -391,6 +391,43 @@ troubleshoot_init () {
 
 #Perform Tests after stack creation
 tests () {
+
+    #initializing
+    print_style "Initializing..." "info"
+    uri=$(aws cloudformation describe-stacks --stack "$STACKNAME-ecr" | jq -r '.Stacks | .[] | .Outputs | .[] | select(.ExportName=="lab13-zach-ecr-Uri") | .OutputValue')
+    ecr_name=$(aws cloudformation describe-stacks --stack "$STACKNAME-ecr" | jq -r '.Stacks | .[] | .Outputs | .[] | select(.ExportName=="lab13-zach-ecr-Name") | .OutputValue')
+    open --background /Applications/Docker.app
+    sleep 5
+    docker logout $uri
+    aws ecr get-login-password | docker login --username AWS --password-stdin "$uri"
+    # download image 
+    docker pull nginx
+    # tag image
+    docker tag $(docker inspect nginx | jq -r '.[].Id') $uri:this-nginx
+    #push image up
+    docker push  $uri:this-nginx
+    docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+
+
+    # Lab 13.1.4
+    print_style "Starting tests...\n\n" "info"
+    docker logout $uri
+    print_style "Pull Unauthenticated: " "warning"
+    docker pull $uri:this-nginx
+    read -r -p "Enter to continue... " answer
+    aws ecr get-login-password | docker login --username AWS --password-stdin "$uri"
+    print_style "Pull Authenticated: " "warning"
+    docker pull  $uri:this-nginx
+
+    read -r -p "Enter to continue and delete docker resources... " answer
+
+    docker logout $uri
+    aws ecr batch-delete-image --repository-name $ecr_name --image-ids imageTag=this-nginx
+    docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+
+
+
+
 
 
     # # Lab 12.1.2
