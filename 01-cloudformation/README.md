@@ -159,6 +159,7 @@ name.
 #### Question: Why YAML
 
 _Why do we prefer the YAML format for CFN templates?_
+>Easier to read and a lot less json notation that can cause confusion. Addtionally, it requires less punctuation to write the same thing in json.
 
 #### Question: Protecting Resources
 
@@ -166,12 +167,29 @@ _What else can you do to prevent resources in a stack from being deleted?_
 
 See [DeletionPolicy](https://aws.amazon.com/premiumsupport/knowledge-center/cloudformation-accidental-updates/).
 
+>Within Cloudformation, you can add a DeletionPolicy directly to the resource object to modify how the resource is handled in the case of deletion via a stack update/delete. Some of the options for DeletionPolicy are Delete, Retain, or Snapshot.
+>
+>You can leverage IAM or SCP Policies to restrict access to AWS resources for an IAM entities (IAM Users and IAM Roles).
+>
+>Stack Policies can be used to restrict who has access to "update" resources within a Cloudformation stack.
+
 _How is that different from applying Termination Protection?_
+
+>Termination Protection only protects against deleting the Cloudformation stack, not the modification of the stack itself.
 
 #### Task: String Substitution
 
 Demonstrate 2 ways to code string combination/substitution using
 built-in CFN functions.
+
+>2 in 1 example below:
+>!Join # Combination of strings.
+>  - '' # Delimiter.
+>  - - !If: # Function to substitute prefix based on the PrefRegion Condition object.
+>      - PrefRegion 
+>      - !Ref AWS::AccountId # If PrefRegion is True
+>      - !Ref AWS::Region # If PrefRegion is False
+>    - Ref: ThisBucketName
 
 ## Lesson 1.2: Integration with Other AWS Resources
 
@@ -227,12 +245,16 @@ Delete your CFN stacks in the same order you created them in. Did you
 succeed? If not, describe how you would _identify_ the problem, and
 resolve it yourself.
 
+>Did not succeed. You can view the "events" for the inital Cloudformation stack and see that the latest event states the reason for the deletion failure. For fixing it, I would need to delete the Cloudformation stack that the initial Cloudformation stack has a dependancy on.
+
 ### Retrospective 1.2
 
 #### Task: Policy Tester
 
 Show how to use the IAM policy tester to demonstrate that the user
 cannot perform 'Put' actions on any S3 buckets.
+
+> IAM service has an IAM Policy Simulator GUI, which allows the user to select the AWS Services and actions an IAM Policy will contain and run a simulation against a specified AWS resource. In this case, you would select S3 and "PutObject" action and specify any S3 bucket within the AWS Account under "Simulation Resource" field. Once all of the fields are set, you can select the "Run Simulation" button at the top of the page.
 
 #### Task: SSM Parameter Store
 

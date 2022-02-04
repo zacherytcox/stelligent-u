@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create an IAM User and Policy for Lab 1.2.
+Parameters:
+  IAMUserName:
+    Type: String
+    Description: Enter IAM User name
+    Default: zach-lab-1-2-user
+Resources:
+  IAMUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: '{{resolve:ssm:TestZachParam:1}}'
+  IAMPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties: 
+      Description: IAM Policy for IAM User
+      ManagedPolicyName: zach-lab-1-2-user-policy
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Sid: VisualEditor0
+          Effect: Allow
+          Action:
+          - s3:Get*
+          - s3:List*
+          Resource: "*"
+
+      Users: 
+        - !Ref IAMUser
+    DependsOn:
+      - IAMUser
+Outputs:
+  IAMPolicyARN:
+      Description: The ARN of the IAM Policy
+      Value: !Ref IAMPolicy
+      Export:
+        Name: IAMPolicyARN

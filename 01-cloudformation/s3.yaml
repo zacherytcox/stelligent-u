@@ -1,0 +1,22 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a minimal CFN template to create an S3 bucket for Lab 1.1.2 with params.
+Parameters:
+  ThisBucketName:
+    Type: String
+    Description: Enter S3 bucket name
+Conditions:
+  PrefRegion: !Equals 
+    - !Ref AWS::Region
+    - us-east-1
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName:
+        !Join
+          - ''
+          - - !If:
+              - PrefRegion
+              - !Ref AWS::AccountId
+              - !Ref AWS::Region
+            - Ref: ThisBucketName

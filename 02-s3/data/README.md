@@ -12,7 +12,7 @@
         - [Question: Copying to Top Level](#question-copying-to-top-level)
         - [Question: Directory Copying](#question-directory-copying)
         - [Question: Object Access](#question-object-access)
-        - [Question: Sync vs Copy](#question-sync-vs-copy)
+        - [Question: Sync vddds Copy](#question-sync-vs-copy)
       - [Lab 2.1.3: Exclude Private Objects When Uploading to a Bucket](#lab-213-exclude-private-objects-when-uploading-to-a-bucket)
       - [Lab 2.1.4: Clean Up](#lab-214-clean-up)
     - [Retrospective 2.1](#retrospective-21)
@@ -120,27 +120,21 @@ Add an object to your bucket:
 ##### Question: Copying to Top Level
 
 _How would you copy the contents of the directory to the top level of your bucket?_
->`aws s3 cp ./data/ s3://stelligent-u-zacherycox/ --recursive`
 
 ##### Question: Directory Copying
 
 _How would you copy the contents and include the directory name in the s3 object
 paths?_
->I would use the same command above:
->`aws s3 cp ./data/ s3://stelligent-u-zacherycox/ --recursive`. Alternatively, I could use a sync command: `aws --profile labs-mfa --region us-west-2 s3 sync ./data/ s3://stelligent-u-zacherycox/ `
 
 ##### Question: Object Access
 
 _[Can anyone else see your file yet](https://docs.aws.amazon.com/AmazonS3/latest/dev/s3-access-control.html)?_
->If other IAM entities within the same AWS Account have IAM access to view my/all S3 Buckets/Objects, then yes. I do not have any resource level controls in place yet. Outside of the AWS Account, no.
 
 For further reading, see the S3 [Access Policy Language Overview](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-policy-language-overview.html).
 
 ##### Question: Sync vs Copy
 
 _What makes "sync" a better choice than "cp" for some S3 uploads?_
-
->If transfering data to the same destination S3 bucket is a common task, `sync` makes the most sense because it detects the differences between the source and destination and only transfers the files the destination is missing. Where a `cp` will copy all of the files regardless if the file already resides within the destination or not.
 
 #### Lab 2.1.3: Exclude Private Objects When Uploading to a Bucket
 
@@ -152,15 +146,10 @@ bucket again **without including the private file**.
 - Did you find two different ways to accomplish this task? If not, make sure to
   read the [documentation on sync flags](https://docs.aws.amazon.com/cli/latest/reference/s3/sync.html).
 
-> `aws s3 sync ./data/ s3://stelligent-u-zacherycox/ --exclude "private*"`
-> `aws s3 cp ./data/ s3://stelligent-u-zacherycox/ --exclude "private*" --recursive`
-
 #### Lab 2.1.4: Clean Up
 
 Clean up: remove your bucket. What do you have to do before you can
 remove it?
-
->You have to remove all of the objects within the S3 bucket. The following cli call allowed me to achieve this: `aws s3 rb --force s3://stelligent-u-zacherycox/`
 
 ### Retrospective 2.1
 
@@ -186,23 +175,16 @@ directory with the "aws s3 sync" command.
 - Use a "sync" command parameter to make all the files in the bucket
   publicly readable.
 
->`aws s3 sync ./data/ s3://stelligent-u-zacherycox/ --acl public-read`
-
 ##### Question: Downloading Protection
 
 _After this, can you download one of your files from the bucket without using
 your API credentials?_
-
->Yes via the Object URL
 
 #### Lab 2.2.2: Use the CLI to Restrict Access to Private Data
 
 You just made "private.txt" publicly readable. Ensure that only the
 bucket owner can read or write that file without changing the
 permissions of the other files.
-
->`aws s3 cp ./data/private.txt s3://stelligent-u-zacherycox/private.txt --acl bucket-owner-full-control`
-
 
 ##### Question: Modify Permissions
 
@@ -211,13 +193,9 @@ permissions on the file?_
 
 (Hint: see the list of [Canned ACLs](https://docs.aws.amazon.com/AmazonS3/latest/dev/acl-overview.html#canned-acl).)
 
->There are two different ways you can modify the permissions on the file(s) for both the `cp` and `sync` commands. First is using the `--acl` flag and specifying a set of predefined grants. The second is leveraging the `--grants` flag and specifying permissions and Grantees.
-
 ##### Question: Changing Permissions
 
 _Is there a way you can change the permissions on the file without re-uploading it?_
-
->Using the `aws s3` commands, not any way that I can see.
 
 #### Lab 2.2.3: Using the API from the CLI
 
@@ -246,13 +224,9 @@ file and read "private.txt".
 _What do you see when you try to read the existing bucket policy before you
 replace it?_
 
->There isnt a S3 Bucket Policy in place. By default on S3 bucket creation, Bucket Policy is blank and is treated as a resource policy.
-
 #### Question: Default Permissions
 
 _How do the default permissions differ from the policy you're setting?_
-
->From the (default) empty permissions, by adding the S3 Bucket Policy above, the difference is that you are granting read permissions for any anonymous user (before, anonymous users did not have permissions before, thus not being allowed access).
 
 #### Lab 2.2.4: Using CloudFormation
 
@@ -321,12 +295,9 @@ Delete one of the objects that you changed.
 
 _Can you still retrieve old versions of the object you removed?_
 
->Yes. AWS places a delete marker but keeps all versions of the object.
-
 ##### Question: Deleting All Versions
 
 _How would you delete all versions?_
->From CLI, you would need to delete all versions individually. From other methods, such as API or console, you can delete multiple objects (versions included).
 
 #### Lab 2.3.3: Tagging S3 Resources
 
@@ -338,7 +309,6 @@ through the CLI or the console.
 
 _Can you change a single tag on a bucket or object, or do you have to change
 all its tags at once?_
->You have to specify all of the tags during `put-object-tagging` and `put-bucket-tagging` CLI calls made using the s3api.
 
 (See `aws:cloudformation:stack-id` and other AWS-managed tags.)
 
@@ -363,8 +333,6 @@ _Can you make any of these transitions more quickly?_
 
 *See the [S3 lifecycle transitions doc](https://docs.aws.amazon.com/AmazonS3/latest/dev/lifecycle-transition-general-considerations.html).*
 
-> Infrequent Access (Standard or S3 One Zone) cannot be any faster than 30 days. 
-
 ### Stretch Challenge
 
 For objects with the tag you assigned earlier and under the `trash/` prefix,
@@ -375,10 +343,6 @@ expire them after 1 day.
 *How could the lifecycle and versioning features of S3 be used to manage
 the lifecycle of a web application? Would you use those features to manage
 the webapp code itself, or just the app's data?*
-
->It all depends on the application and it's requirements. Lifecycle is extremely helpful for cost savings such as reducing the number of logs stored within S3 (I'm thinking CloudTrail with S3 delievery). Versioning could help with accidental deletion/overwrite by a user or malfunction of an application.
->For webapp code, versioning would be extremely useful in the case of an application failure (even though it may cost some additional money to have those previous versions available within the AWS Account). 
->For webapp's data, it depends on the application's behavior, it's data requirements, and the cost budget for the application. But I think overall, versioning would be very useful in the case of faults. Lifecycle would need to be tuned to business needs for DR plan and cost savings.
 
 ## Lesson 2.4: S3 Object Encryption
 
