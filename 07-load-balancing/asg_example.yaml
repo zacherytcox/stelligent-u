@@ -1,27 +1,53 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+  TLSCert:
+    Type: String
 Resources:
   WebServerAsg:
     Type: 'AWS::AutoScaling::AutoScalingGroup'
     Properties:
-      AutoScalingGroupName: 'AutomationBoxes'
       VPCZoneIdentifier:
-        - 'REPLACE_WITH_PUBLIC_SUBNET_IN_AZ1' # Find public subnets within the default VPC or 
-        - 'REPLACE_WITH_PUBLIC_SUBNET_IN_AZ2'
+        - 'subnet-0a423ebf35650131a' 
+        - 'subnet-04e2ac93a826abfc3'
       DesiredCapacity: '3'
       HealthCheckType: 'ELB'
       HealthCheckGracePeriod: 30 
       LaunchConfigurationName: !Ref WebServersLC
       MaxSize: '3'
       MinSize: '3'
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+        - Key: Name
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+          PropagateAtLaunch: "true"
 
   WebServersLC:
     Type: 'AWS::AutoScaling::LaunchConfiguration'
     Properties:
-      ImageId: 'REPLACE_WITH_AMAZON_LINUXV1_AMI'
+      ImageId: 'ami-0ed9277fb7eb570c9'
       InstanceType: 't2.micro'
-      LaunchConfigurationName: 'SimpleWebServerLC'
+      LaunchConfigurationName: 'SimpleWebServerLC-zach'
+      KeyName: !Ref KeyName
       SecurityGroups:
-        - 'REPLACE'
+        - !GetAtt SecurityGroup.GroupId
       UserData: 
         Fn::Base64:
           Fn::Sub: |
@@ -33,7 +59,7 @@ Resources:
             /opt/aws/bin/cfn-init -v \
               --stack ${AWS::StackName} \
               --resource WebServersLC \
-              --configsets All \
+              --configsets ascending \
               --region ${AWS::Region}
 
             # Signal the status from cfn-init
@@ -45,9 +71,17 @@ Resources:
     Metadata:
       'AWS::CloudFormation::Init':
         configSets:
-          All:
-            - ConfigureStelligentProject
-        ConfigureStelligentProject:
+          ascending:
+            - ConfigureStelligentProject-1
+            - ConfigureStelligentProject-2
+        ConfigureStelligentProject-1:
+          packages:
+            amazon-linux-extras:
+              nginx1: []
+          commands:
+            command:
+              command: amazon-linux-extras enable nginx1; yum clean metadata
+        ConfigureStelligentProject-2:
           packages:
             yum:
               nginx: []
@@ -62,3 +96,87 @@ Resources:
               nginx:
                 enabled: 'true'
                 ensureRunning: 'true'
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: True
+      HealthCheckPath: /index.html
+      HealthCheckIntervalSeconds: 30
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 3
+      Port: 80
+      Protocol: HTTP
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: vpc-0a7bd3f082973f0e0
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups: 
+        - !GetAtt SecurityGroup.GroupId
+      Subnets: 
+        - 'subnet-0a423ebf35650131a' 
+        - 'subnet-04e2ac93a826abfc3'
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      Type: application
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+  ALBListener2:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions: 
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: 443
+      Protocol: HTTPS
+      SslPolicy: ELBSecurityPolicy-FS-1-2-Res-2020-10
+      Certificates:
+        - CertificateArn: !Ref TLSCert
