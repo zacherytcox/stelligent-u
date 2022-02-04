@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+  Check:
+    Type: 'AWS::SSM::Parameter::Name'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/name'
+  Name:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/name'
+  Address:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/address'
+  Title:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/title'
+  Team:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/team'
+  Timezone:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/timezone'
+  State:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/state'
+  StartDate:
+    Type: 'AWS::SSM::Parameter::Value<String>'
+    Default: '/zachery.cox.labs/stelligent-u/lab11/start-date'
+  Middlename:
+    Type: String
+    Default: ${{resolve:ssm-secure:/zachery.cox.labs/stelligent-u/lab11/middlename:1}}
+Resources:
+  WebServerAsg:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      VPCZoneIdentifier:
+        - 'subnet-0b67ddc3c2a9e0ee2' 
+        - 'subnet-0cfc445217c11249a'
+      DesiredCapacity: '3'
+      HealthCheckType: 'ELB'
+      HealthCheckGracePeriod: 30 
+      LaunchConfigurationName: !Ref WebServersLC
+      MaxSize: '3'
+      MinSize: '3'
+      TargetGroupARNs:
+        - !Ref TargetGroup
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+        - Key: Name
+          Value: !Ref TagUser
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+          PropagateAtLaunch: "true"
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+          PropagateAtLaunch: "true"
+
+  WebServersLC:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Properties:
+      ImageId: 'ami-0ed9277fb7eb570c9'
+      InstanceType: 't2.micro'
+      LaunchConfigurationName: 'SimpleWebServerLC-zach'
+      KeyName: !Ref KeyName
+      SecurityGroups:
+        - !GetAtt SecurityGroup.GroupId
+      UserData: 
+        Fn::Base64:
+          Fn::Sub: |
+            #!/bin/bash -xe
+
+            yum install -y aws-cfn-bootstrap
+
+            # Install the files and packages from the metadata
+            /opt/aws/bin/cfn-init -v \
+              --stack ${AWS::StackName} \
+              --resource WebServersLC \
+              --configsets ascending \
+              --region ${AWS::Region}
+
+            # Signal the status from cfn-init
+            /opt/aws/bin/cfn-signal -e $? \
+              --stack ${AWS::StackName} \
+              --resource WebServersLC \
+              --region ${AWS::Region}
+
+    Metadata:
+      'AWS::CloudFormation::Init':
+        configSets:
+          ascending:
+            - ConfigureStelligentProject-1
+            - ConfigureStelligentProject-2
+        ConfigureStelligentProject-1:
+          packages:
+            amazon-linux-extras:
+              nginx1: []
+          commands:
+            command:
+              command: amazon-linux-extras enable nginx1; yum clean metadata
+        ConfigureStelligentProject-2:
+          packages:
+            yum:
+              nginx: []
+          files:
+            /usr/share/nginx/html/index.html:
+              content: !Sub '<p>${Name}-${Address}-${Title}-${Team}-${Timezone}-${State}-${StartDate}</p>'
+              mode: '000644'
+              owner: root
+              group: root
+          services:
+            sysvinit:
+              nginx:
+                enabled: 'true'
+                ensureRunning: 'true'
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties: 
+      HealthCheckEnabled: True
+      HealthCheckPath: /index.html
+      Port: 80
+      Protocol: HTTP
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: vpc-0443f59acba8a5162
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      SecurityGroups: 
+        - !GetAtt SecurityGroup.GroupId
+      Subnets: 
+        - 'subnet-0b67ddc3c2a9e0ee2' 
+        - 'subnet-0cfc445217c11249a'
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      Type: application
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties: 
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+Outputs:
+  # HighLevel:
+  #   Description: Test
+  #   Value: !Ref HighLevel
+  Name:
+    Description: TestName
+    Value: !Ref Name
+    

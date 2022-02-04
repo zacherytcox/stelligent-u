@@ -120,6 +120,7 @@ entire subtree with a single query.
 
 _When you look at your stack in the CloudFormation console, can you find
 the values of your parameter resources there?_
+>Under the `Parameters` tab, you can see the values set for the parameters.
 
 #### Lab 11.1.3: Integration with CloudFormation
 
@@ -189,6 +190,8 @@ hierarchy you created earlier.
 Then, in your template, look up the value of "middle-name" and add it to
 the web page served by nginx.
 
+>Not possible because it is not supported. https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html#dynamic-references-ssm-secure-strings
+
 ### Retrospective 11.1
 
 #### Question 1
@@ -196,11 +199,13 @@ the web page served by nginx.
 Read [Using Dynamic References to Specify Template Values](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/dynamic-references.html).
 Why can't you use that feature directly to read "middle-name" and show it
 in your web page?
+>Because CloudFormation doesnt return the actual parameter value for secure strings, but just the reference.
 
 #### Question 2
 
 Can you use Secure String as an `AWS::SSM::Parameter::Value` type in a
 CloudFormation stack?
+>AWS CloudFormation does not support defining template parameters as SecureString Systems Manager parameter types. However, you can specify Secure Strings as parameter values for certain resources by using dynamic parameter patterns. For more information, see Using dynamic references to specify template values.
 
 ## Further Reading
 
