@@ -121,6 +121,7 @@ them, including the CFN resources you need:
 
 _Is executing a CloudFormation template a legitimate example of an
 "application"? Provide an explanation._
+>Absolutely! There are several types of application architectures. In several examples, you see the application of leveraging Elastic Beanstalk or EC2 to deploy an application. However, for serverless applications, you would want to deploy the architecture via IaC (CloudFormation or Terraform).
 
 #### Question: Pipeline Template
 

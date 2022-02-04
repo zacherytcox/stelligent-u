@@ -1,0 +1,47 @@
+[
+    {
+        "ParameterKey": "TagUser",
+        "ParameterValue": "zachery.cox.labs"
+    },
+    {
+        "ParameterKey": "TagLesson",
+        "ParameterValue": "12"
+    },
+    {
+        "ParameterKey": "TagLab",
+        "ParameterValue": "12.2.3"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "zacherycox"
+    },
+    {
+        "ParameterKey": "VPCID",
+        "ParameterValue": "vpc-0a7bd3f082973f0e0"
+    },
+    {
+        "ParameterKey": "SubnetID",
+        "ParameterValue": "subnet-0aaa8295d2fa1e3e4"
+    },
+    {
+        "ParameterKey": "AppStackName",
+        "ParameterValue": "zachtestcodepipeline"
+    },
+    {
+        "ParameterKey": "AppS3BucketName",
+        "ParameterValue": "zachtestcodepipelines3bucket"
+    },
+    {
+        "ParameterKey": "Branch",
+        "ParameterValue": "Lab-12"
+    },
+    {
+        "ParameterKey": "RepoID",
+        "ParameterValue": "zacherytcox/stelligent-u"
+    },
+    {
+        "ParameterKey": "TableName",
+        "ParameterValue": "zacherytcox"
+    }
+    
+]
