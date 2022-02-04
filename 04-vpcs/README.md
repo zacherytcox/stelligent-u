@@ -133,10 +133,13 @@ Launch an EC2 instance into your VPC.
 
 _After you launch your new stack, can you ssh to the instance?_
 
+>No, because it doesnt have a public IP address that I can connect to.
+
 ##### Question: Verify Connectivity
 
 _Is there a way that you can verify Internet connectivity from the instance
 without ssh'ing to it?_
+>We could add `userdata` to the EC2 instance (that instructs the instance to curl a website) and check it's console output logs. Alternatively, we could use the SSM service to "run" an a similar command from the instance and determine if it has Internet connectivity. AWS also has a "Reachability Analyzer" that can be used within the AWS console and provides feedback on possible issues.
 
 #### Lab 4.1.5: Security Group
 
@@ -147,6 +150,7 @@ Add a security group to your EC2 stack:
 ##### Question: Connectivity
 
 _Can you ssh to your instance yet?_
+>No, because there is still not a public IP address that I can connect to.
 
 #### Lab 4.1.6: Elastic IP
 
@@ -160,17 +164,21 @@ Your EC2 was already on a network with an IGW, and now we've fully
 exposed it to the Internet by giving it a public IP address that's
 reachable from anywhere outside your VPC.
 
+
 ##### Question: Ping
 
 _Can you ping your instance now?_
+>Yes, finally!
 
 ##### Question: SSH
 
 _Can you ssh into your instance now?_
+>Yes, finally!
 
 ##### Question: Traffic
 
 _If you can ssh, can you send any traffic (e.g. curl) out to the Internet?_
+>Yes, I can perform a `curl google.com` command and get a response.
 
 At this point, you've made your public EC2 instance an [ssh bastion](https://docs.aws.amazon.com/quickstart/latest/linux-bastion/architecture.html).
 We'll make use of that to explore your network below.
@@ -199,15 +207,18 @@ existing instance stack.
 ##### Question: Access
 
 _Can you find a way to ssh to this instance?_
+>I would not be able to directly SSH to the new EC2 instance. I would need to SSH to my publically available EC2 instance, then SSH to the private EC2 instance (acting as a bastion host).
 
 ##### Question: Egress
 
 _If you can ssh to it, can you send traffic out?_
+> Yes, traffic travels through the NATGateway.
 
 ##### Question: Deleting the Gateway
 
 _If you delete the NAT gateway, what happens to the ssh session on your private
 instance?_
+>Session continues, but I am no longer able to reach the Internet via `Curl`
 
 ##### Question: Recreating the Gateway
 
@@ -215,6 +226,8 @@ _If you recreate the NAT gateway and detach the Elastic IP from the public EC2
 instance, can you still reach the instance from the outside?_
 
 Test it out with the AWS console.
+
+>No, the public EC2 instance was our only way to connect to the private EC2 instance.
 
 #### Lab 4.1.8: Network ACL
 
@@ -231,6 +244,9 @@ First, add one on the public subnet:
 ##### Question: EC2 Connection
 
 _Can you still reach your EC2 instances?_
+
+> Yes, I can reach both. Private instance via the bastion host.
+
 
 Add another ACL to your private subnet:
 

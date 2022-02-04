@@ -1,0 +1,227 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create VPCs for Lab 4.
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  AMI:
+    Type: String
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: String
+  TesterIP:
+    Type: String
+  SubnetCIDR:
+    Type: String
+Resources:
+  EC2:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-SubnetID"}}
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: !Ref TagUser
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#!/bin/bash\n"
+            - "curl www.google.com \n"
+    DependsOn:
+      - SecurityGroup
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      GroupName: ZachSG
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties: 
+      InstanceId: !Ref EC2
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+      CidrBlock: !Ref SubnetCIDR
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: PrivateSubnet
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-NATGatewayID"}}
+      RouteTableId: !Ref RouteTable
+    DependsOn:
+      - RouteTable
+  EC22:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      InstanceType: !Ref InstanceType
+      KeyName: !Ref KeyName
+      SubnetId: !Ref Subnet
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: !Ref TagUser
+      SecurityGroupIds:
+        - !Ref SecurityGroup
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#!/bin/bash\n"
+            - "curl www.google.com \n"
+  NACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: PrivateSubnet
+      VpcId: {"Fn::ImportValue" : {"Fn::Sub" : "Zach-Lab4-VPCID"}}
+  NACLAssoc:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties: 
+      NetworkAclId: !Ref NACL
+      SubnetId: !Ref Subnet
+  NACLEntry1:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId:
+        Ref: NACL
+      RuleNumber: 100
+      Protocol: 6
+      RuleAction: allow
+      CidrBlock: 192.168.0.0/24
+      PortRange:
+        From: 22
+        To: 22
+  NACLEntry2:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId:
+        Ref: NACL
+      RuleNumber: 101
+      Protocol: 6
+      RuleAction: allow
+      CidrBlock: 192.168.0.0/24
+      PortRange:
+        From: 80
+        To: 80
+  NACLEntry3:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId:
+        Ref: NACL
+      RuleNumber: 102
+      Protocol: 1
+      RuleAction: allow
+      CidrBlock: 192.168.0.0/24
+      Icmp:
+        Code: -1
+        Type: -1
+  NACLEntry4:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+       NetworkAclId:
+         Ref: NACL
+       RuleNumber: 103
+       Protocol: -1
+       Egress: true
+       RuleAction: allow
+       CidrBlock: 192.168.0.0/24
+  NACLEntry5:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId:
+        Ref: NACL
+      RuleNumber: 104
+      Protocol: 6
+      RuleAction: allow
+      CidrBlock: 192.168.0.0/24 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      PortRange:
+        From: 1024
+        To: 65535
+Outputs:
+  InstanceID:
+    Description: InstanceID
+    Value: !Ref EC2
+  PrivateIP:
+    Description: PrivateIP
+    Value: !GetAtt  EC2.PrivateIp
+  EIP:
+    Description: EIP
+    Value: !Ref  EIP
