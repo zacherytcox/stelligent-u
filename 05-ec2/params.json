@@ -1,0 +1,22 @@
+[
+    {
+        "ParameterKey": "TagUser",
+        "ParameterValue": "zachery.cox.labs"
+    },
+    {
+        "ParameterKey": "TagLesson",
+        "ParameterValue": "05"
+    },
+    {
+        "ParameterKey": "TagLab",
+        "ParameterValue": "5.2"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.micro"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "zacherycox"
+    }
+]

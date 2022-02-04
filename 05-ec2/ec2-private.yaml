@@ -1,0 +1,254 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create VPCs for Lab 5.
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: String
+  WinAMI:
+    Type: String
+  LinAMI:
+    Type: String
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData: 
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !GetAtt SecurityGroup.GroupId
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            wget https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+            dpkg -i -E ./amazon-cloudwatch-agent.deb
+            echo """
+            {
+              "agent": {
+                "metrics_collection_interval": 10,
+                "run_as_user": "cwagent",
+                "region": "us-east-1"
+              },
+              "metrics": {
+                "metrics_collected": {
+                  "cpu": {
+                    "resources": [
+                      "*"
+                    ],
+                    "measurement": [
+                      {"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+                      {"name": "cpu_usage_nice", "unit": "Percent"},
+                      "cpu_usage_guest"
+                    ],
+                    "totalcpu": false,
+                    "metrics_collection_interval": 10
+                  },
+                  "collectd": {
+                    "metrics_aggregation_interval": 10
+                  },
+                  "disk": {
+                    "measurement": [
+                      "used_percent"
+                    ],
+                    "metrics_collection_interval": 10,
+                    "resources": [
+                      "*"
+                    ]
+                  },
+                  "mem": {
+                    "measurement": [
+                      "mem_used_percent"
+                    ],
+                    "metrics_collection_interval": 10
+                  },
+                  "statsd": {
+                    "metrics_aggregation_interval": 10,
+                    "metrics_collection_interval": 10,
+                    "service_address": ":8125"
+                  }
+                }
+              }
+            }
+
+            """ > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+            /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a start
+            /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+
+        IamInstanceProfile:
+          Name: !Ref InstanceProfile
+        TagSpecifications: 
+          - ResourceType: instance
+            Tags: 
+              - Key: user
+                Value: !Ref TagUser
+              - Key: stelligent-u-lesson
+                Value: !Ref TagLesson
+              - Key: stelligent-u-lab
+                Value: !Ref TagLab
+              - Key: Name
+                Value: !Ref TagUser
+      LaunchTemplateName: !Ref TagUser
+      TagSpecifications: 
+        - ResourceType: launch-template
+          Tags: 
+            - Key: user
+              Value: !Ref TagUser
+            - Key: stelligent-u-lesson
+              Value: !Ref TagLesson
+            - Key: stelligent-u-lab
+              Value: !Ref TagLab
+            - Key: Name
+              Value: !Ref TagUser
+    DependsOn:
+      - SecurityGroup
+
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+      VpcId: vpc-0dc7fe3da867b9cb3
+  RouteTableAssoc:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties: 
+      RouteTableId: !Ref RouteTable
+      SubnetId: !Ref Subnet
+  Route:
+    Type: AWS::EC2::Route
+    Properties: 
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway
+      RouteTableId: !Ref RouteTable
+    DependsOn:
+      - RouteTable
+      - NATGateway
+  NATGateway:
+    Type: AWS::EC2::NatGateway
+    Properties: 
+      SubnetId: subnet-08afb647afaf0164d
+      AllocationId: !GetAtt EIP2.AllocationId
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+    DependsOn:
+      - EIP2
+  EIP2:
+    Type: AWS::EC2::EIP
+    Properties: 
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: vpc-0dc7fe3da867b9cb3
+      CidrBlock: 172.31.100.0/24
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: PrivateSubnet
+  EC22:
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref LinAMI
+      SubnetId: !Ref Subnet
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: 1
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      GroupName: ZachSG
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Role:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: !Ref TagUser
+      Policies: 
+        - PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - cloudwatch:PutMetricData
+                - ec2:DescribeVolumes
+                - ec2:DescribeTags
+                - logs:PutLogEvents
+                - logs:DescribeLogStreams
+                - logs:DescribeLogGroups
+                - logs:CreateLogStream
+                - logs:CreateLogGroup
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                - ssm:GetParameter
+                Resource: arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*
+          PolicyName: !Ref TagUser
+      RoleName: !Ref TagUser
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      InstanceProfileName: !Ref TagUser
+      Roles: 
+        - !Ref Role
+Outputs:
+  EIP:
+    Description: EIP
+    Value: !Ref  EIP

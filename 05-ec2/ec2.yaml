@@ -1,0 +1,429 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create VPCs for Lab 5.
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  InstanceType:
+    Type: String
+  KeyName:
+    Type: String
+  WinAMI:
+    Type: String
+  LinAMI:
+    Type: String
+Resources:
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties: 
+      LaunchTemplateData: 
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref KeyName
+        SecurityGroupIds:
+          - !GetAtt SecurityGroup.GroupId
+        UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash
+            
+        #     wget https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb
+        #     dpkg -i -E ./amazon-cloudwatch-agent.deb
+        #     echo """
+            # {
+            #   "agent": {
+            #     "metrics_collection_interval": 10,
+            #     "run_as_user": "cwagent",
+            #     "region": "us-east-1"
+            #   },
+            #   "metrics": {
+            #     "metrics_collected": {
+            #       "cpu": {
+            #         "resources": [
+            #           "*"
+            #         ],
+            #         "measurement": [
+            #           {"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+            #           {"name": "cpu_usage_nice", "unit": "Percent"},
+            #           "cpu_usage_guest"
+            #         ],
+            #         "totalcpu": false,
+            #         "metrics_collection_interval": 10
+            #       },
+            #       "collectd": {
+            #         "metrics_aggregation_interval": 10
+            #       },
+            #       "disk": {
+            #         "measurement": [
+            #           "used_percent"
+            #         ],
+            #         "metrics_collection_interval": 10,
+            #         "resources": [
+            #           "*"
+            #         ]
+            #       },
+            #       "mem": {
+            #         "measurement": [
+            #           "mem_used_percent"
+            #         ],
+            #         "metrics_collection_interval": 10
+            #       },
+            #       "statsd": {
+            #         "metrics_aggregation_interval": 10,
+            #         "metrics_collection_interval": 10,
+            #         "service_address": ":8125"
+            #       }
+            #     }
+            #   }
+            # }
+
+        #     """ > /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json
+        #     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a start
+        #     /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
+
+        IamInstanceProfile:
+          Name: !Ref InstanceProfile
+        TagSpecifications: 
+          - ResourceType: instance
+            Tags: 
+              - Key: user
+                Value: !Ref TagUser
+              - Key: stelligent-u-lesson
+                Value: !Ref TagLesson
+              - Key: stelligent-u-lab
+                Value: !Ref TagLab
+              - Key: Name
+                Value: !Ref TagUser
+      LaunchTemplateName: !Ref TagUser
+      TagSpecifications: 
+        - ResourceType: launch-template
+          Tags: 
+            - Key: user
+              Value: !Ref TagUser
+            - Key: stelligent-u-lesson
+              Value: !Ref TagLesson
+            - Key: stelligent-u-lab
+              Value: !Ref TagLab
+            - Key: Name
+              Value: !Ref TagUser
+    DependsOn:
+      - SecurityGroup
+  EC22:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: !Ref LinAMI
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - "#!/bin/bash -xe\n"
+            - "apt-get update -y \n"
+            - "apt-get install -y python-setuptools\n"
+            - "mkdir -p /opt/aws/bin\n"
+            - "wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz\n"
+            - "python -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-latest.tar.gz\n"
+            - "/opt/aws/bin/cfn-init -v "
+            - "         --stack "
+            - Ref: AWS::StackName
+            - "         --resource EC2Instance "
+            - "         --configsets full_install "
+            - "         --region "
+            - Ref: AWS::Region
+            - "\n"
+            - "/opt/aws/bin/cfn-signal -e $? "
+            - "         --stack "
+            - Ref: AWS::StackName
+            - "         --resource EC2Instance "
+            - "         --region "
+            - Ref: AWS::Region
+            - "\n"
+      # UserData:
+      #   Fn::Base64: !Sub |
+      #     #!/bin/bash
+
+      #     apt-get update -y
+              
+      #     apt-get install -y python-setuptools
+            
+      #     mkdir -p /opt/aws/bin
+            
+      #     wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz
+            
+      #     python -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-latest.tar.gz
+
+      #     # Install the files and packages from the metadata
+      #     /opt/aws/bin/cfn-init -v --stack ${AWS::StackName} --resource EC22 --region  ${AWS::Region} # Signal the status from cfn-init
+      #     /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource EC22 --region  ${AWS::Region}
+      LaunchTemplate: 
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: 1 
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          full_install:
+          - install_and_enable_cfn_hup
+        install_and_enable_cfn_hup:
+          files:
+            "/etc/cfn/cfn-hup.conf":
+              content:
+                Fn::Join:
+                - ''
+                - - "[main]\n"
+                  - stack=
+                  - Ref: AWS::StackId
+                  - "\n"
+                  - region=
+                  - Ref: AWS::Region
+                  - "\n"
+              mode: '000400'
+              owner: root
+              group: root
+            "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+              content:
+                Fn::Join:
+                - ''
+                - - "[cfn-auto-reloader-hook]\n"
+                  - 'triggers=post.update
+                    '
+                  - 'path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init
+                    '
+                  - 'action=/opt/aws/bin/cfn-init -v '
+                  - "         --stack "
+                  - Ref: AWS::StackName
+                  - "         --resource EC2Instance "
+                  - "         --configsets full_install "
+                  - "         --region "
+                  - Ref: AWS::Region
+                  - "\n"
+                  - 'runas=root
+                    '
+            "/lib/systemd/system/cfn-hup.service":
+              content:
+                Fn::Join:
+                - ''
+                - - "[Unit]\n"
+                  - "Description=cfn-hup daemon\n\n"
+                  - "[Service]\n"
+                  - 'Type=simple
+                    '
+                  - 'ExecStart=/opt/aws/bin/cfn-hup
+                    '
+                  - "Restart=always\n\n"
+                  - "[Install]\n"
+                  - WantedBy=multi-user.target
+          commands:
+            01enable_cfn_hup:
+              command: systemctl enable cfn-hup.service
+            02start_cfn_hup:
+              command: systemctl start cfn-hup.service
+    # Metadata: 
+    #   AWS::CloudFormation::Init: 
+    #     configSets: 
+    #       ascending: 
+    #         - "01install_and_enable_cfn_hup"
+    #         - "02download"
+    #         - "03install"
+    #         - "04config"
+    #         - "05start"
+    #     01install_and_enable_cfn_hup:
+    #       files:
+    #         "/etc/cfn/cfn-hup.conf":
+    #           content:
+    #             Fn::Join:
+    #             - ''
+    #             - - "[main]\n"
+    #               - stack=
+    #               - Ref: AWS::StackId
+    #               - "\n"
+    #               - region=
+    #               - Ref: AWS::Region
+    #               - "\n"
+    #           mode: '000400'
+    #           owner: root
+    #           group: root
+    #         "/etc/cfn/hooks.d/cfn-auto-reloader.conf":
+    #           content:
+    #             Fn::Join:
+    #             - ''
+    #             - - "[cfn-auto-reloader-hook]\n"
+    #               - 'triggers=post.update
+    #                 '
+    #               - 'path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init
+    #                 '
+    #               - 'action=/opt/aws/bin/cfn-init -v '
+    #               - "         --stack "
+    #               - Ref: AWS::StackName
+    #               - "         --resource EC2Instance "
+    #               - "         --configsets full_install "
+    #               - "         --region "
+    #               - Ref: AWS::Region
+    #               - "\n"
+    #               - 'runas=root
+    #                 '
+    #         "/lib/systemd/system/cfn-hup.service":
+    #           content:
+    #             Fn::Join:
+    #             - ''
+    #             - - "[Unit]\n"
+    #               - "Description=cfn-hup daemon\n\n"
+    #               - "[Service]\n"
+    #               - 'Type=simple
+    #                 '
+    #               - 'ExecStart=/opt/aws/bin/cfn-hup
+    #                 '
+    #               - "Restart=always\n\n"
+    #               - "[Install]\n"
+    #               - WantedBy=multi-user.target
+    #       commands:
+    #         01enable_cfn_hup:
+    #           command: systemctl enable cfn-hup.service
+    #         02start_cfn_hup:
+    #           command: systemctl start cfn-hup.service
+    #     01download: 
+    #       commands: 
+    #         command: "wget https://s3.us-east-1.amazonaws.com/amazoncloudwatch-agent-us-east-1/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb"
+    #     02install:  
+    #       commands: 
+    #         command: "dpkg -i -E ./amazon-cloudwatch-agent.deb"
+    #     03config:   
+    #       files: 
+    #         /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json: 
+    #           content: !Sub |
+    #             {
+    #             "agent": {
+    #               "metrics_collection_interval": 10,
+    #               "run_as_user": "cwagent",
+    #               "region": "us-east-1"
+    #             },
+    #             "metrics": {
+    #               "metrics_collected": {
+    #                 "cpu": {
+    #                   "resources": [
+    #                     "*"
+    #                   ],
+    #                   "measurement": [
+    #                     {"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+    #                     {"name": "cpu_usage_nice", "unit": "Percent"},
+    #                     "cpu_usage_guest"
+    #                   ],
+    #                   "totalcpu": false,
+    #                   "metrics_collection_interval": 10
+    #                 },
+    #                 "collectd": {
+    #                   "metrics_aggregation_interval": 10
+    #                 },
+    #                 "disk": {
+    #                   "measurement": [
+    #                     "used_percent"
+    #                   ],
+    #                   "metrics_collection_interval": 10,
+    #                   "resources": [
+    #                     "*"
+    #                   ]
+    #                 },
+    #                 "mem": {
+    #                   "measurement": [
+    #                     "mem_used_percent"
+    #                   ],
+    #                   "metrics_collection_interval": 10
+    #                 },
+    #                 "statsd": {
+    #                   "metrics_aggregation_interval": 10,
+    #                   "metrics_collection_interval": 10,
+    #                   "service_address": ":8125"
+    #                 }
+    #               }
+    #             }
+    #     04start:  
+    #       commands: 
+    #         command: "/opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a start"
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties: 
+      InstanceId: !Ref EC22
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties: 
+      GroupDescription: SecurityGroup
+      GroupName: ZachSG
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+      Tags:  
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  Role:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Description: !Ref TagUser
+      Policies: 
+        - PolicyDocument: 
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                - cloudwatch:PutMetricData
+                - ec2:DescribeVolumes
+                - ec2:DescribeTags
+                - logs:PutLogEvents
+                - logs:DescribeLogStreams
+                - logs:DescribeLogGroups
+                - logs:CreateLogStream
+                - logs:CreateLogGroup
+                Resource: "*"
+              - Effect: Allow
+                Action:
+                - ssm:GetParameter
+                Resource: arn:aws:ssm:*:*:parameter/AmazonCloudWatch-*
+          PolicyName: !Ref TagUser
+      RoleName: !Ref TagUser
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties: 
+      InstanceProfileName: !Ref TagUser
+      Roles: 
+        - !Ref Role
+  # WaitCondition:
+  #   Type: AWS::CloudFormation::WaitCondition
+  #   CreationPolicy:
+  #     ResourceSignal:
+  #       Timeout: PT15M
+  #       Count: 1
+Outputs:
+  EIP:
+    Description: EIP
+    Value: !Ref  EIP

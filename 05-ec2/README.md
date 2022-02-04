@@ -141,6 +141,8 @@ Windows Server 2012 R2:
 - Query the stack's events using the AWS CLI. What happened to your
   original EC2 Windows instance?
 
+>It got destroyed and a new instance was created because the change of AMI requires a new resource.
+
 #### Lab 5.1.4: Teardown
 
 There is usually some delay between initiating an instance's termination
@@ -164,6 +166,7 @@ values via a scripted mechanism.
 _When updating a Stack containing an EC2 instance,
 [what other changes](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-updating-stacks-update-behaviors.html)
 will cause the same thing to occur as in Lab 5.1.3?_
+> Change to AZ, CPU Options, AMI, Key Pair, launch template, network interfaces, and several others.
 
 ## Lesson 5.2: Instance Access
 
@@ -199,6 +202,7 @@ function.
   IPV4 address.
 
 Try pinging that IP address. Does it work?
+>No. The default security group does not allow ping from my ip.
 
 - Using the CFN template, create a Security Group enabling
   [ICMP](https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol).
@@ -238,6 +242,7 @@ Can you SSH into the instance?
 
 Now can you SSH into your instance? If not, troubleshoot and fix the
 issue using your CFN template.
+> Yes I can.
 
 ### Retrospective 5.2
 
@@ -298,6 +303,7 @@ Userdata docs to debug.
 
   - Is it necessary to [apply monitoring scripts](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/mon-scripts.html)
     to send data to CloudWatch?
+    >No, not anymore. `The CloudWatch monitoring scripts are deprecated. We provide information about the monitoring scripts for customers who have not yet migrated from the deprecated monitoring scripts to the CloudWatch agent.` 
 
 - Create a new role that trusts the EC2 Service to assume it, and that
   has the privileges to perform whatever actions are necessary to
@@ -312,6 +318,7 @@ Userdata docs to debug.
 
 Compare those same metrics with the values received from Lab 5.3.1.
 Record your results.
+>Images attached. There are more logs being ingested into CloudWatch Metrics.
 
 ##### Task: Private Subnet
 
@@ -319,6 +326,8 @@ The default VPC has only public subnets that you launched into. Copy
 your template and add a new private subnet and launch your instance into
 this private subnet. Add any other services you need to be able to send
 metrics to CloudWatch from the instance in the private subnet.
+
+>Confirmed
 
 #### Lab 5.3.3: cfn-init
 
