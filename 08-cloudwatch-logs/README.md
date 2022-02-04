@@ -139,9 +139,11 @@ company's business. It's helpful to know what CloudWatch Log's service
 limitations are.*
 
 - What are the minimum and maximum retention times?
+>1 and 3653
 
 - Instead of keeping data in CW Logs forever, can you do anything else
   with them? What might a useful lifecycle for logs look like?
+>Depending on the logging requirements (cost, compliance, etc.), we can remove older/unneeded logs via a lifecycle policy. 
 
 ## Lesson 8.2: CloudWatch Logs with CloudTrail events
 
@@ -202,6 +204,7 @@ for the resources that will use it:
 _What type of events might be important to track in an AWS account? If
 you were automating mitigating actions for the events, what might they
 be and what AWS resource(s) would you use?_
+>Changing Root user settings, changing billing settings, deleting important key resources (CloudTrail, Config, GuardDuty, etc.), and creating high cost resources.
 
 #### Task
 

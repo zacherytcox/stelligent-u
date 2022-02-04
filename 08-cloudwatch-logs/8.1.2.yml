@@ -7,6 +7,14 @@ Parameters:
     Type: 'AWS::EC2::VPC::Id'
   SubnetID:
     Type: 'AWS::EC2::Subnet::Id'
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
 Resources:
   LaunchTemplate:
     Type: AWS::EC2::LaunchTemplate
@@ -15,6 +23,7 @@ Resources:
       LaunchTemplateData:
         InstanceType: t3.nano
         ImageId: !Ref UbuntuAMI
+        KeyName: !Ref KeyName
         IamInstanceProfile:
           Name: !Ref InstanceProfile
         NetworkInterfaces:
@@ -32,6 +41,15 @@ Resources:
   EC2:
     Type: AWS::EC2::Instance
     Properties:
+      Tags: 
+        - Key: user
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+        - Key: Name
+          Value: !Ref TagUser
       LaunchTemplate:
         LaunchTemplateId: !Ref LaunchTemplate
         Version: "1"
@@ -56,7 +74,90 @@ Resources:
         config:
           files:
             /opt/aws/amazon-cloudwatch-agent/amazon-cloudwatch-agent.json:
-              # Add your configuration file here
+              content: !Sub |
+                {
+                  "agent": {
+                    "metrics_collection_interval": 60,
+                    "run_as_user": "root"
+                  },
+                  "metrics": {
+                    "metrics_collected": {
+                      "collectd": {
+                        "metrics_aggregation_interval": 60
+                      },
+                      "disk": {
+                        "measurement": [
+                          "used_percent"
+                        ],
+                        "metrics_collection_interval": 60,
+                        "resources": [
+                          "*"
+                        ]
+                      },
+                      "mem": {
+                        "measurement": [
+                          "mem_used_percent"
+                        ],
+                        "metrics_collection_interval": 60
+                      },
+                      "statsd": {
+                        "metrics_aggregation_interval": 60,
+                        "metrics_collection_interval": 10,
+                        "service_address": ":8125"
+                      }
+                    }
+                  }
+                }
+                # {
+                # "agent": {
+                #   "metrics_collection_interval": 10,
+                #   "run_as_user": "cwagent",
+                #   "region": "us-east-1"
+                # },
+                # "metrics": {
+                #   "metrics_collected": {
+                #     "cpu": {
+                #       "resources": [
+                #         "*"
+                #       ],
+                #       "measurement": [
+                #         {"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+                #         {"name": "cpu_usage_nice", "unit": "Percent"},
+                #         "cpu_usage_guest"
+                #       ],
+                #       "totalcpu": false,
+                #       "metrics_collection_interval": 10
+                #     },
+                #     "disk": {
+                #       "measurement": [
+                #         "used_percent"
+                #       ],
+                #       "metrics_collection_interval": 10,
+                #       "resources": [
+                #         "*"
+                #       ]
+                #     },
+                #     "mem": {
+                #       "measurement": [
+                #         "mem_used_percent"
+                #       ],
+                #       "metrics_collection_interval": 10
+                #     },
+                #     "statsd": {
+                #       "metrics_aggregation_interval": 10,
+                #       "metrics_collection_interval": 10,
+                #       "service_address": ":8125"
+                #     }
+                #   }
+                # },
+                # "logs": {
+                #   "files": {
+                #     "collect_list":{
+                #       "log_group_name": "zach.cox.c9logs",
+                #       "log_stream_name": "c9.training"
+                #     }
+                #   }
+                # }
         launch:
           commands:
             launchCloudwatch:
@@ -87,3 +188,12 @@ Resources:
     Properties:
       GroupDescription: 'Stelligent-U 08 CloudWatch'
       VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          FromPort: 8
+          ToPort: -1
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0 #!Join [ "", [ !Ref TesterIP,"/32" ] ]
