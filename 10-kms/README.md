@@ -66,10 +66,13 @@ Use the KMS CLI to now decrypt a ciphertext file.
 
 _For decrypting the ciphertext file, why didn't you have to specify a key? How
 did you have permission to decrypt?_
+>KMS can get the KMS key from metadata that it adds to the symmetric ciphertext blob.
+>The `Allow use of the key` SID of the KMS key resource policy gives users access to encrypt and decrypt.
 
 #### Question: KMS Alias
 
 _Why is it beneficial to use a KMS Alias?_
+>In the CLI commands, you can specify an Alias instead of the key id. The key id is a long, generated, unique key that isnt easy to remember. This is where an alias can be helpful, especially when leveraging the CLI by hand.
 
 ## Lesson 10.2: Implementation of KMS Keys in S3
 
@@ -109,6 +112,7 @@ Delete your KMS CFN Stack.
 ##### Question: CMK
 
 _What happened to your CMK? Why?_
+>The CMK is listed as `Pending Deletion`. The reason being, if there were any mistakes and a CMK was deleted, content encrypted using the CMK would not be accessable. By having a scheduled deletion, you are able to simply disable the CMK (as a part of scheduled deletion) to help determine if you no longer need the CMK within the time window.
 
 ### Retrospective 10.2
 
