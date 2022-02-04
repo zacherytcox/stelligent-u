@@ -104,13 +104,19 @@ Group (ASG): [ask Amazon to create one for us from a running instance](https://d
 
 - Limit the ASG to a single instance at all times.
 
+>aws autoscaling create-auto-scaling-group --auto-scaling-group-name my-asg-from-instance  --instance-id <> --min-size 1 --max-size 1 --desired-capacity 1
+
 ##### Question: Resources
 
 _What was created in addition to the new Auto Scaling Group?_
+>A new EC2 instance and Launch Configuration
+
+>aws --profile labs-mfa --region us-east-1 autoscaling describe-launch-configurations --launch-configuration-names my-asg-from-instance
 
 ##### Question: Parameters
 
 _What parameters did Amazon record in the resources it created for you?_
+>Subnet, AMI, Instance Type, and Security Group
 
 #### Lab 6.1.2: Launch Config and ASG in CFN
 
@@ -134,6 +140,7 @@ created for you in Lab 6.1.1.
 
 _What config info or resources did you have to create explicitly that Amazon
 created for you when launching an ASG from an existing instance?_
+>Launch Configuration object.
 
 #### Lab 6.1.3: Launch Config Changes
 
@@ -143,12 +150,14 @@ t2.small. Update your stack.
 ##### Question: Stack Updates
 
 _After updating your stack, did your running instance get replaced or resized?_
+>It didnt do anything to it. I believe you have to run an `instance refresh`.
 
 Terminate the instance in your ASG.
 
 ##### Question: Replacement Instance
 
 _Is the replacement instance the new size or the old?_
+>New size
 
 #### Lab 6.1.4: ASG Update Policy
 
@@ -162,10 +171,12 @@ type to t2.medium. Update your stack.
 
 _After updating, what did you see change? Did your running instance get
 replaced this time?_
+>Yes and Yes
 
 ##### Question: Launch Config
 
 _Did the launch config change or was it replaced?_
+>It was replaced (had a conflict with the replacement because I used a custom name)
 
 #### Lab 6.1.5: Launch Template
 
@@ -177,6 +188,7 @@ parameters you need to.
 
 _What config info or resources do you have to provide in addition to what
 Launch Configurations require?_
+>Nothing additional was provided. I was able to copy and paste parameters in the CloudFormation template.
 
 You'll see both launch configs and launch templates in your client
 engagements. Templates were [introduced in Nov 2017](https://aws.amazon.com/about-aws/whats-new/2017/11/introducing-launch-templates-for-amazon-ec2-instances/)
@@ -194,6 +206,7 @@ associated with those. Then tear your stack down.
 
 _After you tear down the stack, do all the associated resources go away?
 What's left?_
+>Yes, all was deleted that I can tell.
 
 ### Retrospective 6.1
 
@@ -241,6 +254,8 @@ the new instance launch.
 
 _How long did it take for the new instance to spin up? How long before it was
 marked as healthy?_
+> it took less than 2mins to identify the instance as unhealthy, spin up a new instance, and mark it as healthy.
+
 
 #### Lab 6.2.2: Scale Out
 
@@ -252,10 +267,12 @@ then update the stack.
 ##### Question: Desired Count
 
 _Did it work? If it didn't, what else do you have to increase?_
+>Initially I changed the `desired` field, but not the limit. That caused an error within the CloudFormation stack. I then changed the `maxsize` to 3. Afterwards, it worked.
 
 ##### Question: Update Delay
 
 _How quickly after your stack update did you see the ASG change?_
+> Within 1min.
 
 #### Lab 6.2.3: Manual Interference
 
@@ -263,6 +280,7 @@ Take one of your instances [out of your ASG manually](http://docs.aws.amazon.com
 using the CLI. Observe Auto Scaling as it launches a replacement
 instance. Take note of what it does with the instance you marked
 unhealthy.
+>It created a new instance and once it is labeled "healthy", the AutoScaling Group placed the new instance "InService" and removed/terminated the instance I marked unhealthy.
 
 #### Lab 6.2.4: Troubleshooting Features
 
@@ -294,6 +312,7 @@ now, so we can't exercise AddToLoadBalancer, but let's take a look at
 another. Disable Launch, then put an instance on standby and back in
 action again. Note the process you have to go through, including any
 commands you run.
+>My commands are within my `test.sh` file.
 
 ### Retrospective 6.2
 

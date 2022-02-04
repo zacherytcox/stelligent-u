@@ -1,0 +1,31 @@
+[
+    {
+        "ParameterKey": "TagUser",
+        "ParameterValue": "zachery.cox.labs"
+    },
+    {
+        "ParameterKey": "TagLesson",
+        "ParameterValue": "06"
+    },
+    {
+        "ParameterKey": "TagLab",
+        "ParameterValue": "6.2.4"
+    },
+    {
+        "ParameterKey": "InstanceType",
+        "ParameterValue": "t2.small"
+    },
+    {
+        "ParameterKey": "KeyName",
+        "ParameterValue": "zacherycox"
+    },
+    {
+      "ParameterKey": "LinAMI",
+      "ParameterValue": "ami-07d02ee1eeb0c996c"
+    },
+    {
+      "ParameterKey": "myLaunchTemplateVersionNumber",
+      "ParameterValue": "1"
+    }
+    
+]
