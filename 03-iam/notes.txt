@@ -1,0 +1,38 @@
+
+
+aws cloudformation create-stack --stack-name "lab3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+aws --profile labs-mfa --region us-east-1 cloudformation describe-stack-resources --stack  lab3-zach-plz-delete
+
+
+
+
+aws --profile labs-mfa --region us-east-1 iam list-roles | grep -i "zach" -A 20 -B 20
+
+
+aws cloudformation update-stack --stack-name "lab3-zach-plz-delete" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/iam.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+
+aws --profile labs-mfa --region us-east-1 iam get-role --role zachroleplzdelete
+
+aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  lab3-zach-plz-delete
+
+
+
+aws cloudformation create-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/lab3-3.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+
+aws sts assume-role --role-arn arn:aws:iam::324320755747:role/zachroleplzdelete --role-session-name "test" --profile labs-mfa
+
+aws --profile labs-mfa --region us-east-1 cloudformation delete-stack --stack  lab3-zach
+
+
+aws --profile labs-mfa --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox2
+
+aws --profile labs-mfa --region us-east-1 s3 cp ./iam.yaml s3://stelligent-u-zacherycox1/iam.yaml
+
+aws cloudformation update-stack --stack-name "lab3-zach" --profile labs-mfa --region us-east-1 --template-body "file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/03-iam/lab3-3.yaml" --capabilities CAPABILITY_NAMED_IAM
+
+aws --profile test --region us-east-1 s3api list-objects --bucket stelligent-u-zacherycox1
+
+aws --profile labs-mfa --region us-east-1 iam get-role-policy --role-name zachroleplzdelete --policy-name Temp

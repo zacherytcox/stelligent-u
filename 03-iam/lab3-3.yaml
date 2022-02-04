@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: This is a CFN template to create an IAM Role for Lab 3.3.
+Resources:
+  S3Bucket1:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: stelligent-u-zacherycox1
+  S3Bucket2:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: stelligent-u-zacherycox2
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+        - Effect: Allow
+          Principal:
+            AWS: arn:aws:iam::324320755747:user/zachery.cox.labs
+          Action: sts:AssumeRole
+      RoleName: zachroleplzdelete
+      Policies:
+        - PolicyName: Temp
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+            - Effect: Allow
+              Resource: 
+              - arn:aws:s3:::stelligent-u-zacherycox2*
+              - arn:aws:s3:::stelligent-u-zacherycox2*/*
+              Action:
+              - s3:Get*
+              - s3:List*
+            - Effect: Allow
+              Resource: 
+              - arn:aws:s3:::stelligent-u-zacherycox1*
+              - arn:aws:s3:::stelligent-u-zacherycox1*/*
+              Action: s3:*
+            - Effect: Deny
+              Resource: 
+              - arn:aws:s3:::stelligent-u-zacherycox2/lebowski/*
+              Action: s3:PutObject
+
