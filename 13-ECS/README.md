@@ -135,6 +135,8 @@ Take a quick look at the documentation for [this lab](https://docs.aws.amazon.co
 - Try `docker pull`ing the image you exported earlier from your stack. It
   should succeed, can you explain what happened?
 
+> Using the authorization token as a password doesn't work.
+
 #### Lab 13.1.6 Push the latest image of NGINX from DockerHub to your repository
 
 Pull the latest [NGINX](https://hub.docker.com/_/nginx) image and push it to
@@ -150,23 +152,30 @@ your ECR repository
 
 _We did not talk about encryption of images in this lab. How do you make sure
 images are encrypted at rest and while in-transit when using ECR?_
+>During creation of the repository, you can specify a KMS key to encrypt images at rest. For encryption in-transit, AWS endpoints for the ECR service only support HTTPS for any connectivity.
 
 #### Question: Image Mirroring
 
 _When pushing public images from Docker Hub to ECR, images can get out of date
 compared to their version on Docker Hub. Think about AWS native solutions to
 mirror a public Docker Hub image on ECR._
+>https://docs.docker.com/registry/recipes/mirror/
+>You can achieve this by either configuring a local registry mirror and point all daemons there or you can automate the process of pulling images and pushing them to ECR repo. That could be via a deployment pipeline when deploying or some kind of AWS automation.
 
 #### Question: Repository Policies
 
 _In order to follow *the least privileges* principal, it is a common ask to set
 up repository policies for an ECR repository. What are some conditions you can
 impose on accessing a repository?_
+>Tags, OrganizationID, Region, IP, and more. Documentation here: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#AvailableKeys
 
 #### Question: Repository Authentication
 
 _In this lesson, you were presented with two authentication methods for your
 Docker CLI. Explain the differences and why would you choose one over the other._
+>If you wanted to provision temporary credentials, that might exceed their current permissions, you can leverage a Token so it will provide the access they need for the next 12 hours via API. Password would be good if you are looking to authenticate with your current permissions.
+>The get-login-password is the preferred method for authenticating to an Amazon ECR private registry when using the AWS CLI. With the password, it will allow you access to the ECR resources your IAM credentials allow (think of a union here).
+>An authorization token's permission scope matches that of the IAM principal used to retrieve the authentication token. You can then use this token to authenticate via API requests.
 
 ## Lesson 13.2: Elastic Container Service - Classic ECS
 

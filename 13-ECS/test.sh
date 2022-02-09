@@ -399,25 +399,39 @@ tests () {
     open --background /Applications/Docker.app
     sleep 5
     docker logout $uri
-    aws ecr get-login-password | docker login --username AWS --password-stdin "$uri"
+    aws ecr get-login-password | docker login --username AWS --password-stdin $uri
     # download image 
     docker pull nginx
     # tag image
-    docker tag $(docker inspect nginx | jq -r '.[].Id') $uri:this-nginx
+    print_style "$(docker images)" "warning"
+    docker tag nginx $uri:latest
+    print_style "$(docker images)" "warning"
     #push image up
-    docker push  $uri:this-nginx
+    docker push $uri:latest
+
+    # # Lab 13.1.6
     docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+    docker run --rm -it $uri:latest /bin/bash -c "ls"
 
 
-    # Lab 13.1.4
-    print_style "Starting tests...\n\n" "info"
-    docker logout $uri
-    print_style "Pull Unauthenticated: " "warning"
-    docker pull $uri:this-nginx
-    read -r -p "Enter to continue... " answer
-    aws ecr get-login-password | docker login --username AWS --password-stdin "$uri"
-    print_style "Pull Authenticated: " "warning"
-    docker pull  $uri:this-nginx
+    # # Lab 13.1.4
+    # print_style "Starting tests...\n\n" "info"
+    # docker logout $uri
+    # print_style "Pull Unauthenticated: " "warning"
+    # docker pull $uri:this-nginx
+    # aws ecr get-login-password | docker login --username AWS --password-stdin "$uri"
+    # print_style "Pull Authenticated: " "warning"
+    # docker pull  $uri:this-nginx
+
+    # # Lab 13.1.5
+    # print_style "Starting tests...\n\n" "info"
+    # docker logout $uri
+    # print_style "Pull Unauthenticated: " "warning"
+    # docker pull $uri:this-nginx
+    # this_token=$(aws ecr get-authorization-token | jq -r '.authorizationData | .[] | .authorizationToken' | base64 --decode)
+    # docker login --username AWS --password "$this_token" "$account_id"
+    # print_style "Pull Authenticated: " "warning"
+    # docker pull  $uri:this-nginx
 
     read -r -p "Enter to continue and delete docker resources... " answer
 
