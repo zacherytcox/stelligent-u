@@ -238,6 +238,7 @@ public load balancer DNS address through a CloudFormation Output.
 Now that your container is running, you need to have access to its logs. Go back
 and configure your containers to log to CloudWatch. What steps do you need to take
 to enable this feature?
+> You need to use the "awslogs" log driver within your tasks. This is the only way to get the logs for Fargate clusters.
 
 #### Task: Cleanup your ECS service
 
@@ -252,10 +253,12 @@ configuration is needed in your EC2 instances. By referring to the documentation
 for [ECS agents](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-install.html),
 explain the steps required to associate EC2 Container Instances with a non-default
 cluster._
+>You need to add userdata to the EC2 instance as a part of the Launch configuration.
 
 #### Question: ECS with custom AMIs
 
 _You can run containers on your own AMIs. Can you explain how is this possible?_
+>You would need to install and run the dependancies to run the ECS agent via Docker.
 
 ## Lesson 13.3: Elastic Container Service - Fargate ECS
 

@@ -377,3 +377,24 @@ Resources:
           - MyAppLBSecurityGroup
           - GroupId
       ToPort: 80
+Outputs:
+  VPCID:
+    Description: VPCID
+    Value: !Ref MyVpc
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCID"
+  PubSubnet1:
+    Description: PubSubnet1
+    Value: !Ref MyVpcPublicSubnet1Subnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PubSubnet1"
+  PubSubnet2:
+    Description: PubSubnet2
+    Value: !Ref MyVpcPublicSubnet2Subnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PubSubnet2"
+  TaskExeRole:
+    Description: TaskExeRole
+    Value: !Ref MyAppTaskDefExecutionRole
+    Export:
+      Name: !Sub "${AWS::StackName}-TaskExeRole"

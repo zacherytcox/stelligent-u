@@ -433,11 +433,24 @@ tests () {
     # print_style "Pull Authenticated: " "warning"
     # docker pull  $uri:this-nginx
 
-    read -r -p "Enter to continue and delete docker resources... " answer
 
-    docker logout $uri
-    aws ecr batch-delete-image --repository-name $ecr_name --image-ids imageTag=this-nginx
-    docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+
+
+
+
+
+
+
+    read -r -p "Enter 'delete' to delete all docker resources, anything else to skip... " this_answer
+
+    if [[ "$this_answer" == "delete" ]]
+        then
+            docker logout $uri
+            aws ecr batch-delete-image --repository-name $ecr_name --image-ids imageTag=$uri:latest
+            docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+    fi
+
+    
 
 
 
@@ -713,7 +726,7 @@ fi
 #Function to delete all stacks
 if [[ "$1" == 'delete' ]]
     then
-        init_delete; delete_stack; exit 1
+        init_delete; delete_stack $STACKNAME-ecs; delete_stack $STACKNAME-ecr; delete_stack; exit 1
 fi
 
 
@@ -722,12 +735,14 @@ while true; do
     init
     this_cfn_location="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/13-ECS/ecr.yaml"
     create_stack $STACKNAME-ecr $this_cfn_location $YAMLPARAMSLOCATION
-    create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
+    # create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
+    this_cfn_location="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/13-ECS/ecs.yaml"
+    create_stack $STACKNAME-ecs $this_cfn_location $YAMLPARAMSLOCATION
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, 3 to delete all stacks, Enter to exit: " answer
     case $answer in
         [1]* ) init_delete; delete_stack; exit 1;;
-        [3]* ) quiet "init_delete; delete_stack $STACKNAME-ecr; delete_stack"; print_style "Delete Complete!" "success"; exit 1;;
+        [3]* ) quiet "init_delete; delete_stack $STACKNAME-ecs; delete_stack $STACKNAME-ecr; delete_stack"; print_style "Delete Complete!" "success"; exit 1;;
         [2]* ) : ;;
         "" ) exit 1;;
         * ) print_style  "Please answer 1, 2, or Enter" "danger";;
