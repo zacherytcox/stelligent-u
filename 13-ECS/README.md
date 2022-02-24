@@ -309,10 +309,12 @@ public load balancer DNS address through a CloudFormation Output.
 #### Question: EC2 capacity
 
 _You did not need to specify an EC2 capacity in this lab, why?_
+>Because Fargate is managed by AWS and they handle the compute capacity.
 
 #### Question: Fargate volume/bind mounts
 
 _Fargate does not support volume and bind mounts. Why?_
+>Bind mounts are supported for tasks hosted on both Fargate and Amazon EC2 instances. Once all containers using a bind mount are stopped, for example when a task is stopped, the data is removed. - AWS
 
 #### Question: Fargate Networking
 
@@ -320,11 +322,13 @@ _[Container linking](https://docs.docker.com/network/links/) is a deprecated fea
 of Docker and it is still widely used! This is currently supported on ECS, but not
 on Fargate. Can you explain how a similar networking setup can be achieved on Fargate
 without container linking?_
+>Within Docker, you can use the "networks" feature to achieve the same effects. For ECS Fargate, you can leverage service discovery and reference the DNS name of the container(s) you want to connect to.  https://docs.aws.amazon.com/AmazonECS/latest/bestpracticesguide/networking-connecting-services.html
 
 #### Question: Fargate vs. Classic
 
 _Under what circumstances could you _not_ use Fargate and why? Would ECS be capable
 of handling these situations?_
+>For Fargate, you are restricted to only specific networking modes (awsvpc). You will miss out on other networking modes such as "bridge" and "host", where you can have your own virtualized network or have exposed container ports  mapped directly to a corresponding host port.
 
 #### Question: Scaling vertically and horizontally
 
@@ -332,6 +336,8 @@ _In terms of ECS application scaling, horizontal scaling means having more machi
 and scaling vertically means having more instances of the same application on the
 same machine. Can you explain which one of these are possible on Fargate and which
 ones are possible on ECS and why? Be precise in explaining the differences._
+>ECS supports both and you have complete control of how you want to scale your application (and the burden of managing the cluster instances). You can leverage an autoscaling group to allow you to scale horizontally and you can update your autoscaling launch template to specify how big of an EC2 instance you want to run your containers on (thus configures the vertical aspect).
+>Fargate supports horizontal only, thus only allowing each Fargate task to have its own isolation boundary and does not share the underlying kernel, CPU resources, memory resources, or elastic network interface with another task.
 
 #### Task: Cleanup
 

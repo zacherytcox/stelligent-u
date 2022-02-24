@@ -396,22 +396,27 @@ tests () {
     print_style "Initializing..." "info"
     uri=$(aws cloudformation describe-stacks --stack "$STACKNAME-ecr" | jq -r '.Stacks | .[] | .Outputs | .[] | select(.ExportName=="lab13-zach-ecr-Uri") | .OutputValue')
     ecr_name=$(aws cloudformation describe-stacks --stack "$STACKNAME-ecr" | jq -r '.Stacks | .[] | .Outputs | .[] | select(.ExportName=="lab13-zach-ecr-Name") | .OutputValue')
-    open --background /Applications/Docker.app
-    sleep 5
-    docker logout $uri
-    aws ecr get-login-password | docker login --username AWS --password-stdin $uri
-    # download image 
-    docker pull nginx
-    # tag image
-    print_style "$(docker images)" "warning"
-    docker tag nginx $uri:latest
-    print_style "$(docker images)" "warning"
-    #push image up
-    docker push $uri:latest
+    # open --background /Applications/Docker.app
+    # sleep 5
+    # docker logout $uri
+    # aws ecr get-login-password | docker login --username AWS --password-stdin $uri
+    # # download image 
+    # docker pull nginx
+    # # tag image
+    # print_style "$(docker images)" "warning"
+    # docker tag nginx $uri:latest
+    # print_style "$(docker images)" "warning"
+    # #push image up
+    # docker push $uri:latest
 
-    # # Lab 13.1.6
-    docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
-    docker run --rm -it $uri:latest /bin/bash -c "ls"
+    # # # Lab 13.1.6
+    # docker container kill $(docker ps -q) ; docker volume rm $(docker volume ls -q); docker network rm `docker network ls -q`; docker rmi -f $(docker images -aq); print_style "Local Docker Delete Complete!\n" "success"
+    # docker run --rm -it $uri:latest /bin/bash -c "ls"
+
+
+
+
+
 
 
     # # Lab 13.1.4
@@ -736,7 +741,7 @@ while true; do
     this_cfn_location="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/13-ECS/ecr.yaml"
     create_stack $STACKNAME-ecr $this_cfn_location $YAMLPARAMSLOCATION
     # create_stack $STACKNAME $YAMLLOCATION $YAMLPARAMSLOCATION
-    this_cfn_location="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/13-ECS/ecs.yaml"
+    this_cfn_location="file:///Users/zachery.cox/Documents/Code/Github/stelligent-u/13-ECS/ecs-fargate.yaml"
     create_stack $STACKNAME-ecs $this_cfn_location $YAMLPARAMSLOCATION
     tests
     read -r -p "Enter 1 to delete the stack, 2 to update stack + test again, 3 to delete all stacks, Enter to exit: " answer
