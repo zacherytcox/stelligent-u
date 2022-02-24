@@ -1,3 +1,12 @@
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
 Resources:
   MyVpc:
     Type: AWS::EC2::VPC
@@ -6,6 +15,15 @@ Resources:
       EnableDnsHostnames: true
       EnableDnsSupport: true
       InstanceTenancy: default
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyVpcPublicSubnet1Subnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -17,6 +35,15 @@ Resources:
           - 0
           - Fn::GetAZs: ""
       MapPublicIpOnLaunch: true
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyVpcPublicSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -63,6 +90,15 @@ Resources:
           - 1
           - Fn::GetAZs: ""
       MapPublicIpOnLaunch: true
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyVpcPublicSubnet2RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -109,6 +145,15 @@ Resources:
           - 0
           - Fn::GetAZs: ""
       MapPublicIpOnLaunch: false
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyVpcPrivateSubnet1RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -140,6 +185,15 @@ Resources:
           - 1
           - Fn::GetAZs: ""
       MapPublicIpOnLaunch: false
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyVpcPrivateSubnet2RouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -181,6 +235,15 @@ Resources:
         - Ref: MyVpcPublicSubnet1Subnet
         - Ref: MyVpcPublicSubnet2Subnet
       Type: application
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
     DependsOn:
       - MyVpcPublicSubnet1DefaultRoute
       - MyVpcPublicSubnet2DefaultRoute
@@ -196,6 +259,15 @@ Resources:
           ToPort: 80
       VpcId:
         Ref: MyVpc
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyAppLBSecurityGroupEgress:
     Type: AWS::EC2::SecurityGroupEgress
     Properties:
@@ -281,6 +353,15 @@ Resources:
           IpProtocol: "-1"
       VpcId:
         Ref: MyVpc
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
   MyAppServiceSecurityGroupIngress:
     Type: AWS::EC2::SecurityGroupIngress
     Properties:
@@ -296,3 +377,24 @@ Resources:
           - MyAppLBSecurityGroup
           - GroupId
       ToPort: 80
+Outputs:
+  VPCID:
+    Description: VPCID
+    Value: !Ref MyVpc
+    Export:
+      Name: !Sub "${AWS::StackName}-VPCID"
+  PubSubnet1:
+    Description: PubSubnet1
+    Value: !Ref MyVpcPublicSubnet1Subnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PubSubnet1"
+  PubSubnet2:
+    Description: PubSubnet2
+    Value: !Ref MyVpcPublicSubnet2Subnet
+    Export:
+      Name: !Sub "${AWS::StackName}-PubSubnet2"
+  TaskExeRole:
+    Description: TaskExeRole
+    Value: !Ref MyAppTaskDefExecutionRole
+    Export:
+      Name: !Sub "${AWS::StackName}-TaskExeRole"

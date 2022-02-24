@@ -119,6 +119,7 @@ pull images from it. Take a quick glance at [ECR CLI commands](https://docs.aws.
 - Use `ecr get-login` to login to your ECR repository.
 - Try `docker pull`ing the image you exported earlier from your stack. It
   should succeed, can you explain what happened?
+  >I was not authenticated during my initial pull. My second pull, I was authenticated via leveraging the `ecr get-login-password` cli call.
 
 #### Lab 13.1.5 Use `ecr get-authorization-token` to authorize your Docker CLI
 
@@ -133,6 +134,8 @@ Take a quick look at the documentation for [this lab](https://docs.aws.amazon.co
   for Docker CLI.
 - Try `docker pull`ing the image you exported earlier from your stack. It
   should succeed, can you explain what happened?
+
+> Using the authorization token as a password doesn't work.
 
 #### Lab 13.1.6 Push the latest image of NGINX from DockerHub to your repository
 
@@ -149,23 +152,30 @@ your ECR repository
 
 _We did not talk about encryption of images in this lab. How do you make sure
 images are encrypted at rest and while in-transit when using ECR?_
+>During creation of the repository, you can specify a KMS key to encrypt images at rest. For encryption in-transit, AWS endpoints for the ECR service only support HTTPS for any connectivity.
 
 #### Question: Image Mirroring
 
 _When pushing public images from Docker Hub to ECR, images can get out of date
 compared to their version on Docker Hub. Think about AWS native solutions to
 mirror a public Docker Hub image on ECR._
+>https://docs.docker.com/registry/recipes/mirror/
+>You can achieve this by either configuring a local registry mirror and point all daemons there or you can automate the process of pulling images and pushing them to ECR repo. That could be via a deployment pipeline when deploying or some kind of AWS automation.
 
 #### Question: Repository Policies
 
 _In order to follow *the least privileges* principal, it is a common ask to set
 up repository policies for an ECR repository. What are some conditions you can
 impose on accessing a repository?_
+>Tags, OrganizationID, Region, IP, and more. Documentation here: https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_condition-keys.html#AvailableKeys
 
 #### Question: Repository Authentication
 
 _In this lesson, you were presented with two authentication methods for your
 Docker CLI. Explain the differences and why would you choose one over the other._
+>If you wanted to provision temporary credentials, that might exceed their current permissions, you can leverage a Token so it will provide the access they need for the next 12 hours via API. Password would be good if you are looking to authenticate with your current permissions.
+>The get-login-password is the preferred method for authenticating to an Amazon ECR private registry when using the AWS CLI. With the password, it will allow you access to the ECR resources your IAM credentials allow (think of a union here).
+>An authorization token's permission scope matches that of the IAM principal used to retrieve the authentication token. You can then use this token to authenticate via API requests.
 
 ## Lesson 13.2: Elastic Container Service - Classic ECS
 
@@ -228,6 +238,7 @@ public load balancer DNS address through a CloudFormation Output.
 Now that your container is running, you need to have access to its logs. Go back
 and configure your containers to log to CloudWatch. What steps do you need to take
 to enable this feature?
+> You need to use the "awslogs" log driver within your tasks. This is the only way to get the logs for Fargate clusters.
 
 #### Task: Cleanup your ECS service
 
@@ -242,10 +253,12 @@ configuration is needed in your EC2 instances. By referring to the documentation
 for [ECS agents](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ecs-agent-install.html),
 explain the steps required to associate EC2 Container Instances with a non-default
 cluster._
+>You need to add userdata to the EC2 instance as a part of the Launch configuration.
 
 #### Question: ECS with custom AMIs
 
 _You can run containers on your own AMIs. Can you explain how is this possible?_
+>You would need to install and run the dependancies to run the ECS agent via Docker.
 
 ## Lesson 13.3: Elastic Container Service - Fargate ECS
 
@@ -296,10 +309,12 @@ public load balancer DNS address through a CloudFormation Output.
 #### Question: EC2 capacity
 
 _You did not need to specify an EC2 capacity in this lab, why?_
+>Because Fargate is managed by AWS and they handle the compute capacity.
 
 #### Question: Fargate volume/bind mounts
 
 _Fargate does not support volume and bind mounts. Why?_
+>Bind mounts are supported for tasks hosted on both Fargate and Amazon EC2 instances. Once all containers using a bind mount are stopped, for example when a task is stopped, the data is removed. - AWS
 
 #### Question: Fargate Networking
 
@@ -307,11 +322,13 @@ _[Container linking](https://docs.docker.com/network/links/) is a deprecated fea
 of Docker and it is still widely used! This is currently supported on ECS, but not
 on Fargate. Can you explain how a similar networking setup can be achieved on Fargate
 without container linking?_
+>Within Docker, you can use the "networks" feature to achieve the same effects. For ECS Fargate, you can leverage service discovery and reference the DNS name of the container(s) you want to connect to.  https://docs.aws.amazon.com/AmazonECS/latest/bestpracticesguide/networking-connecting-services.html
 
 #### Question: Fargate vs. Classic
 
 _Under what circumstances could you _not_ use Fargate and why? Would ECS be capable
 of handling these situations?_
+>For Fargate, you are restricted to only specific networking modes (awsvpc). You will miss out on other networking modes such as "bridge" and "host", where you can have your own virtualized network or have exposed container ports  mapped directly to a corresponding host port.
 
 #### Question: Scaling vertically and horizontally
 
@@ -319,6 +336,8 @@ _In terms of ECS application scaling, horizontal scaling means having more machi
 and scaling vertically means having more instances of the same application on the
 same machine. Can you explain which one of these are possible on Fargate and which
 ones are possible on ECS and why? Be precise in explaining the differences._
+>ECS supports both and you have complete control of how you want to scale your application (and the burden of managing the cluster instances). You can leverage an autoscaling group to allow you to scale horizontally and you can update your autoscaling launch template to specify how big of an EC2 instance you want to run your containers on (thus configures the vertical aspect).
+>Fargate supports horizontal only, thus only allowing each Fargate task to have its own isolation boundary and does not share the underlying kernel, CPU resources, memory resources, or elastic network interface with another task.
 
 #### Task: Cleanup
 

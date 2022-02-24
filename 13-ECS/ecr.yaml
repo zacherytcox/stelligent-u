@@ -1,0 +1,73 @@
+Parameters:
+  TagUser:
+    Type: String
+  TagLesson:
+    Type: String
+  TagLab:
+    Type: String
+  KeyName:
+    Type: String
+Resources:
+  ECR:
+    Type: AWS::ECR::Repository
+    Properties: 
+      RepositoryName: !Ref TagUser 
+      ImageScanningConfiguration:
+        ScanOnPush: true
+      LifecyclePolicy: 
+        LifecyclePolicyText: !Sub | 
+          {
+            "rules": [
+              {
+                "rulePriority": 2,
+                "description": "Expire images older than 5 days",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              },
+              {
+                "rulePriority": 1,
+                "description": "Expire untagged images",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 1
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+      Tags:   
+        - Key: user
+          Value: !Ref TagUser
+        - Key: Name
+          Value: !Ref TagUser
+        - Key: stelligent-u-lesson
+          Value: !Ref TagLesson
+        - Key: stelligent-u-lab
+          Value: !Ref TagLab
+Outputs:
+  ECR1:
+    Description: ECR Name
+    Value: !Ref ECR
+    Export:
+      Name: !Sub "${AWS::StackName}-Name"
+  ECR2:
+    Description: "ECR Arn"
+    Value: !GetAtt ECR.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-Arn"
+  ECR3:
+    Description: "ECR Uri"
+    Value: !GetAtt ECR.RepositoryUri
+    Export:
+      Name: !Sub "${AWS::StackName}-Uri"
+  
