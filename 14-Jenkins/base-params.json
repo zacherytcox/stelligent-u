@@ -21,10 +21,10 @@
     },
     {
       "ParameterKey": "EC2KeyName",
-      "ParameterValue": "test-user-key"
+      "ParameterValue": "zacherycox"
     },
      {
       "ParameterKey": "IAMUserOwnerIp",
-      "ParameterValue": "XX.XXX.XXX.XXX"
+      "ParameterValue": "X.X.X.X"
     }
   ]
