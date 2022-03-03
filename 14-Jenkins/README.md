@@ -179,6 +179,7 @@ logs can be found inside Cloudwatch.
 
 _Can you access the agent machine directly? Taking the distributed
 architecture in account, is this preferable?_
+>Yes I can (placed the instances in the public subnet for possible troubleshooting), I think that it would not be preferable because you would want your Jenkins resources to be elastic and scalable without human interaction. 
 
 #### Question: Security
 
@@ -186,6 +187,7 @@ _How secure is your Jenkins environment? What measures can be taken to
 increase security from the Jenkins configuration side (*hint:*,
 authentication & authorization)  as well as with the infrastructure
 resources (*hint:* security groups, NACL, WAF, Inspector)?_
+>Not very out of the box. We can secure access to the EC2 instances via doing the following: Restrict network access via AWS network security controls (Security Groups, NACLs, Network configurations, reducing exposed/used ports, etc.), application access controls (Authenciation and Authorization, least permissive permissions), AWS/application logging (centralizing OS and application logs, CloudTrail, VPC Flow Logs, etc.), and leveraging security monitoring software (or AWS Services) to find security issues (GuardDuty, Inspector, CrowdStrike, etc.)
 
 ## Lesson 14.2: Plugins
 

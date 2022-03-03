@@ -27,7 +27,7 @@ Parameters:
     Default: X.X.X.X
   EC2InstanceType:
     Type: String
-    Default: t2.micro  
+    Default: t2.medium  
 Resources:
   MyVpc:
     Type: AWS::EC2::VPC
@@ -46,6 +46,9 @@ Resources:
       VpcId: !Ref MyVpc
       CidrBlock: !Join ['/', [!Ref PrivateIp, '25' ] ]
       Tags:
+        -
+          Key: Name
+          Value: PublicSubnet
         -
           Key: user
           Value: !Ref IAMUserOwnerOfResources
@@ -91,6 +94,14 @@ Resources:
           ToPort: -1
           IpProtocol: -1
           CidrIp: 0.0.0.0/0
+  SGBaseIngress:
+   Type: 'AWS::EC2::SecurityGroupIngress'
+   Properties:
+      GroupId: !Ref MyEC2SecurityGroup
+      FromPort: -1
+      ToPort: -1
+      IpProtocol: -1
+      SourceSecurityGroupId: !GetAtt MyEC2SecurityGroup.GroupId
   MyEC2InstanceIp:
     Type: AWS::EC2::EIP
     Properties:
@@ -102,7 +113,8 @@ Resources:
       SubnetId: !Ref MySubnet
       KeyName: !Ref EC2KeyName
       ImageId: !Ref EC2InstanceAmi
-      InstanceType: !Ref EC2InstanceType
+      InstanceType: t2.medium
+      IamInstanceProfile: CloudWatchAgentServerRole
       SecurityGroupIds:
         - !Ref MyEC2SecurityGroup
       UserData:
@@ -124,19 +136,47 @@ Resources:
             systemctl start jenkins
             sleep 30
             systemctl status jenkins
-            curl http://localhost:8080
-            cat /var/lib/jenkins/secrets/initialAdminPassword
-      #       yum update -y
-      #       wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
-      #       rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
-      #       yum install wget -y
-      #       yum upgrade -y
-      #       yum-config-manager --enable epel
-      #       yum install -y jenkins
-      #       service daemon-reload start 
-      #       service jenkins start 
-      #       chkconfig jenkins on
-      #       systemctl status jenkins
+            yum -y install amazon-cloudwatch-agent
+            echo '{
+              "agent": {
+                "metrics_collection_interval": 60,
+                "run_as_user": "root"
+              },
+              "logs": {
+                "logs_collected": {
+                  "files": {
+                    "collect_list": [
+                      {
+                        "file_path": "/var/log/jenkins/jenkins.log",
+                        "log_group_name": "jenkins.log",
+                        "log_stream_name": "{instance_id}"
+                      }
+                    ]
+                  }
+                }
+              },
+              "metrics": {
+                "metrics_collected": {
+                  "disk": {
+                    "measurement": [
+                      "used_percent"
+                    ],
+                    "metrics_collection_interval": 60,
+                    "resources": [
+                      "*"
+                    ]
+                  },
+                  "mem": {
+                    "measurement": [
+                      "mem_used_percent"
+                    ],
+                    "metrics_collection_interval": 60
+                  }
+                }
+              }
+            }' > /opt/aws/amazon-cloudwatch-agent/bin/config.json
+            /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -s -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/bin/config.json
+            /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -m ec2 -a status
       Tags:
         -
           Key: user
@@ -272,22 +312,73 @@ Resources:
     Properties:
       AllocationId: !GetAtt [ MyNatGatewayInstanceIp, AllocationId ]
       SubnetId: !Ref MySubnet
-  MySecondEC2Instance:
+  MyUbuntuEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      SubnetId: !Ref MySecondSubnet
+      SubnetId: !Ref MySecondSubnet #MySubnet #MySecondSubnet
       KeyName: !Ref EC2KeyName
-      ImageId: !Ref EC2InstanceAmi
+      ImageId: ami-04505e74c0741db8d
       InstanceType: !Ref EC2InstanceType
+      IamInstanceProfile: CloudWatchAgentServerRole
       SecurityGroupIds:
         - !Ref MyEC2SecurityGroup
+      UserData:
+          Fn::Base64: !Sub |
+            #!/bin/bash -xe
+            apt-get update -y 
+            apt-get upgrade -y 
+            apt install openjdk-11-jre-headless -y
+            # wget -O ~/agent.jar http://${MyEC2InstanceIp}:8080/jnlpJars/agent.jar
+            # java -jar ~/agent.jar -master http://${MyEC2InstanceIp}:8080/jenkins/  -username admin -password 8cb42631e6f142368517158c2ec16208
+            # java -jar ~/agent.jar -jnlpUrl http://${MyEC2InstanceIp}:8080/computer/agent-name/slave-agent.jnlp
+            
       Tags:
+        -
+          Key: Name
+          Value: UbuntuJenkins
         -
           Key: user
           Value: !Ref IAMUserOwnerOfResources
         -
           Key: stack
           Value: !Ref "AWS::StackId"
+  # MyAmz2EC2Instance:
+  #   Type: AWS::EC2::Instance
+  #   Properties:
+  #     SubnetId: !Ref MySubnet #MySecondSubnet
+  #     KeyName: !Ref EC2KeyName
+  #     ImageId: !Ref EC2InstanceAmi
+  #     IamInstanceProfile: CloudWatchAgentServerRole
+  #     InstanceType: !Ref EC2InstanceType
+  #     SecurityGroupIds:
+  #       - !Ref MyEC2SecurityGroup
+  #     UserData:
+  #         Fn::Base64: !Sub |
+  #           #!/bin/bash -xe
+  #           wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+  #           rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+  #           yum -y upgrade
+  #           yum-config-manager --enable epel
+  #           amazon-linux-extras install epel -y
+  #           amazon-linux-extras install java-openjdk11 -y
+  #           yum-config-manager --enable epel
+  #           yum -y upgrade
+  #           wget -O ~/swarm-client-3.9.jar https://repo.jenkins-ci.org/releases/org/jenkins-ci/plugins/swarm-client/3.9/swarm-client-3.9.jar
+  #           java -jar ~/swarm-client-3.9.jar -url ${MyEC2InstanceIp} -username admin -password test123
+  #           # java -jar /root/swarm-client-3.9.jar -master http://${MyEC2InstanceIp}:50000/jenkins -username admin -password test123
+  #           # java -jar /root/swarm-client-3.9.jar -master http://10.0.0.125:50000/jenkins -username admin -password test123
+  #           # java -jar /root/swarm-client-3.9.jar -autoDiscoveryAddress -username admin -password test123
+  #           # 
+  #     Tags:
+  #       -
+  #         Key: Name
+  #         Value: Amz2Jenkins
+  #       -
+  #         Key: user
+  #         Value: !Ref IAMUserOwnerOfResources
+  #       -
+  #         Key: stack
+  #         Value: !Ref "AWS::StackId"
 Outputs:
   MyVpcOutput:
     Description: Id of MyVpc
@@ -298,9 +389,9 @@ Outputs:
   MyEC2InstanceOutput:
     Description: Id of MyEC2Instance
     Value: !Ref MyEC2Instance
-  MyEC2InstancePrivateIpOutput:
-    Description: Private Ip address of MyEC2Instance
-    Value: !GetAtt [MyEC2Instance, PrivateIp]
+  MyEC2AgentPrivateIp:
+    Description: Private Ip address of MyUbuntuEC2Instance
+    Value: !GetAtt [MyUbuntuEC2Instance, PrivateIp]
   MyEC2InstancePublicIpOutput:
     Description: Public Ip address of MyEC2Instance
     Value: !GetAtt [MyEC2Instance, PublicIp]
