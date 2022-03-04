@@ -8,22 +8,25 @@ pipeline {
         stage("One"){
             steps{
 
-                ls -alh
-                pwd
-                whoami
+                sh 'ls -alh'
+                sh 'pwd'
+                sh 'whoami'
                 // git clone https://github.com/zacherytcox/stelligent-u.git         
 
             }
         }
 
         stage("Two"){
+            tools {
+                maven 'apache-maven-3.0.1' 
+            }
             steps{
                 
-                ls -alh
-                pwd
-                whoami
-                cd my-app
-                // mvn clean validate compile test package //` of the root Java project source "`my-app`"
+                sh 'ls -alh'
+                sh 'pwd'
+                sh 'whoami'
+                sh 'cd my-app'
+                sh 'mvn clean validate compile test package' //` of the root Java project source "`my-app`"
                 
             }
         }
