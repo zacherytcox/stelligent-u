@@ -40,7 +40,7 @@ pipeline {
             steps{
                 
                 s3Upload {
-
+                    profileName: test
                 }
                 archiveArtifacts artifacts: '14-Jenkins/my-app/target/my-app*'
                 
