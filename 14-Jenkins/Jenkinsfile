@@ -14,7 +14,8 @@ pipeline {
                 sh 'ls -alh'
                 sh 'pwd'
                 sh 'whoami'
-                sh 'git clone https://github.com/zacherytcox/stelligent-u.git ./$RANDOM-$RANDOM-$RANDOM'
+                sh 'git clone https://github.com/zacherytcox/stelligent-u.git ./tmp'
+                sh 'rm -rf ./tmp'
 
             }
         }
@@ -30,6 +31,17 @@ pipeline {
                 sh 'pwd'
                 sh 'whoami'
                 sh 'cd 14-Jenkins/my-app && mvn clean validate compile test package' //` of the root Java project source "`my-app`"
+                archiveArtifacts artifacts: '14-Jenkins/my-app/target/my-app*'
+                
+            }
+        }
+
+        stage("S3"){
+            steps{
+                
+                s3Upload {
+
+                }
                 archiveArtifacts artifacts: '14-Jenkins/my-app/target/my-app*'
                 
             }
