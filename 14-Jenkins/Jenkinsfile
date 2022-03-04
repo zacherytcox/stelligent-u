@@ -29,7 +29,7 @@ pipeline {
                 sh 'pwd'
                 sh 'whoami'
                 sh 'cd 14-Jenkins/my-app && mvn clean validate compile test package' //` of the root Java project source "`my-app`"
-                archiveArtifacts artifacts: 'output/*.txt'
+                archiveArtifacts artifacts: '14-Jenkins/my-app/target/my-app*'
                 
             }
         }
