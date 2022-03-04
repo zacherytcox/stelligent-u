@@ -251,6 +251,11 @@ limitations and tradeoffs of each one.
 
 _Considering the many options for plugin management, which makes the most
 sense for our current Jenkins infrastructure?_
+>Jenkins client CLI tool would make the most sense with our architecture.
+>install-plugins.sh is deprecated and asks you to switch to the cli tool.
+>We currently dont have an Ansible running to execute the Ansible playbook to install plugins.
+>JCasC is problematic and isnt recommended for due to many features still in development.
+
 
 ## Lesson 14.3: Pipelines
 
@@ -266,7 +271,7 @@ to perform work.
 Pipelines can be written in 3 ways:
 
 - [Scripted Pipeline Job](https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline)
-  - This is the traditional manner for creating Pipelines. The syntax is
+  - This is the traditional manner for creating Pipelines. The syntax is 
     strictly Groovy and allows for advanced control flows (loops, conditions, etc)
     not available in the Declarative syntax.
 - [Declarative Pipeline Job](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline)

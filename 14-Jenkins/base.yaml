@@ -136,6 +136,7 @@ Resources:
             systemctl start jenkins
             sleep 30
             systemctl status jenkins
+            yum -y install git
             yum -y install amazon-cloudwatch-agent
             echo '{
               "agent": {

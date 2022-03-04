@@ -1,0 +1,25 @@
+pipeline {
+
+    agent any
+    environment { 
+        lab = '14'
+    }
+    stages{
+        stage("One"){
+            steps{
+
+                git clone https://github.com/zacherytcox/stelligent-u.git         
+
+            }
+        }
+
+        stage("Two"){
+            steps{
+
+                mvn clean validate compile test package //` of the root Java project source "`my-app`"
+                
+            }
+        }
+    }
+
+}
