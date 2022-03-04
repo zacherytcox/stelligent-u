@@ -335,6 +335,7 @@ S3, Nexus, npm, Ruby Gems, etc).
 Because we have no way of accessing build artifacts from a build, edit the
 Jenkinsfile to provide artifact upload capability to an S3 bucket using a
 plugin.
+>https://www.jenkins.io/doc/pipeline/steps/s3/
 
 ##### Task: Build Parameters
 
@@ -399,6 +400,7 @@ This makes it preferable to use when standardizing pipelines.
 
 _What would happen if in your pipeline, you needed to run AWS specific
 commands on an agent? Why wouldn't the commands work?_
+>There could be several reasons because it would depend on how it is architected. There could be issues due to the same IAM Role not being attached to all of the agents or possibly a lack of permissions.
 
 #### Question: Build Definition Management
 
@@ -406,6 +408,7 @@ _Build definitions are typically stored in the same repository of the
 project that will be built. When there are many projects, how could
 management of the many build definitions be handled to provide for better
 centralization and restricted control to a dedicated administration team?_
+> Management could leverage a code repository to store and manage the configuration of the build definitions and then reference it via "SCM".
 
 ## Lesson 14.4: Backup
 
@@ -447,6 +450,7 @@ snapshot command was issued._
 
 _How would you auto-schedule volume snapshots to periodically occur and
 use the latest backup for recovery?_
+>You can leverage CloudWatch Events to schedule and Lambda to execute. Alternatively, you could leverage the Amazon Backup service.
 
 ## Further Reading
 
