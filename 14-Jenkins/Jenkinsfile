@@ -36,16 +36,15 @@ pipeline {
             }
         }
 
-        stage("S3"){
-            steps{
+        // stage("S3"){
+        //     steps{
                 
-                s3Upload {
-                    profileName: test
-                }
-                archiveArtifacts artifacts: '14-Jenkins/my-app/target/my-app*'
+        //         s3Upload {
+        //             profileName: test
+        //         }
                 
-            }
-        }
+        //     }
+        // }
     }
 
 }
