@@ -25,7 +25,7 @@ pipeline {
                 sh 'ls -alh'
                 sh 'pwd'
                 sh 'whoami'
-                sh 'cd my-app'
+                sh 'cd 14-Jenkins/my-app'
                 sh 'mvn clean validate compile test package' //` of the root Java project source "`my-app`"
                 
             }
