@@ -23,7 +23,7 @@ pipeline {
                 pwd
                 whoami
                 cd my-app
-                mvn clean validate compile test package //` of the root Java project source "`my-app`"
+                // mvn clean validate compile test package //` of the root Java project source "`my-app`"
                 
             }
         }
