@@ -8,14 +8,21 @@ pipeline {
         stage("One"){
             steps{
 
-                git clone https://github.com/zacherytcox/stelligent-u.git         
+                ls -alh
+                pwd
+                whoami
+                // git clone https://github.com/zacherytcox/stelligent-u.git         
 
             }
         }
 
         stage("Two"){
             steps{
-
+                
+                ls -alh
+                pwd
+                whoami
+                cd my-app
                 mvn clean validate compile test package //` of the root Java project source "`my-app`"
                 
             }
