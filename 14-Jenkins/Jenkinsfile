@@ -11,6 +11,7 @@ pipeline {
         stage("One"){
             steps{
 
+                echo "${testparam}"
                 sh 'ls -alh'
                 sh 'pwd'
                 sh 'whoami'
