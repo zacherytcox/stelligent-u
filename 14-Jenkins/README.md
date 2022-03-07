@@ -179,6 +179,7 @@ logs can be found inside Cloudwatch.
 
 _Can you access the agent machine directly? Taking the distributed
 architecture in account, is this preferable?_
+>Yes I can (placed the instances in the public subnet for possible troubleshooting), I think that it would not be preferable because you would want your Jenkins resources to be elastic and scalable without human interaction. 
 
 #### Question: Security
 
@@ -186,6 +187,7 @@ _How secure is your Jenkins environment? What measures can be taken to
 increase security from the Jenkins configuration side (*hint:*,
 authentication & authorization)  as well as with the infrastructure
 resources (*hint:* security groups, NACL, WAF, Inspector)?_
+>Not very out of the box. We can secure access to the EC2 instances via doing the following: Restrict network access via AWS network security controls (Security Groups, NACLs, Network configurations, reducing exposed/used ports, etc.), application access controls (Authenciation and Authorization, least permissive permissions), AWS/application logging (centralizing OS and application logs, CloudTrail, VPC Flow Logs, etc.), and leveraging security monitoring software (or AWS Services) to find security issues (GuardDuty, Inspector, CrowdStrike, etc.)
 
 ## Lesson 14.2: Plugins
 
@@ -249,6 +251,11 @@ limitations and tradeoffs of each one.
 
 _Considering the many options for plugin management, which makes the most
 sense for our current Jenkins infrastructure?_
+>Jenkins client CLI tool would make the most sense with our architecture.
+>install-plugins.sh is deprecated and asks you to switch to the cli tool.
+>We currently dont have an Ansible running to execute the Ansible playbook to install plugins.
+>JCasC is problematic and isnt recommended for due to many features still in development.
+
 
 ## Lesson 14.3: Pipelines
 
@@ -264,7 +271,7 @@ to perform work.
 Pipelines can be written in 3 ways:
 
 - [Scripted Pipeline Job](https://jenkins.io/doc/book/pipeline/syntax/#scripted-pipeline)
-  - This is the traditional manner for creating Pipelines. The syntax is
+  - This is the traditional manner for creating Pipelines. The syntax is 
     strictly Groovy and allows for advanced control flows (loops, conditions, etc)
     not available in the Declarative syntax.
 - [Declarative Pipeline Job](https://jenkins.io/doc/book/pipeline/syntax/#declarative-pipeline)
@@ -328,6 +335,7 @@ S3, Nexus, npm, Ruby Gems, etc).
 Because we have no way of accessing build artifacts from a build, edit the
 Jenkinsfile to provide artifact upload capability to an S3 bucket using a
 plugin.
+>https://www.jenkins.io/doc/pipeline/steps/s3/
 
 ##### Task: Build Parameters
 
@@ -392,6 +400,7 @@ This makes it preferable to use when standardizing pipelines.
 
 _What would happen if in your pipeline, you needed to run AWS specific
 commands on an agent? Why wouldn't the commands work?_
+>There could be several reasons because it would depend on how it is architected. There could be issues due to the same IAM Role not being attached to all of the agents or possibly a lack of permissions.
 
 #### Question: Build Definition Management
 
@@ -399,6 +408,7 @@ _Build definitions are typically stored in the same repository of the
 project that will be built. When there are many projects, how could
 management of the many build definitions be handled to provide for better
 centralization and restricted control to a dedicated administration team?_
+> Management could leverage a code repository to store and manage the configuration of the build definitions and then reference it via "SCM".
 
 ## Lesson 14.4: Backup
 
@@ -440,6 +450,7 @@ snapshot command was issued._
 
 _How would you auto-schedule volume snapshots to periodically occur and
 use the latest backup for recovery?_
+>You can leverage CloudWatch Events to schedule and Lambda to execute. Alternatively, you could leverage the Amazon Backup service.
 
 ## Further Reading
 
